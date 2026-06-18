@@ -26,22 +26,23 @@ binds {
     Mod+F1 hotkey-overlay-title="开关输入法 Toggle fcitx" {spawn-sh "pkill fcitx5 || fcitx5 ";}
     Mod+F2 hotkey-overlay-title=null  {spawn-sh "pkill cava || true && pkill waybar || true && waybar -c $HOME/.config/waybar/config.jsonc -s $HOME/.config/waybar/style.css ";}
     Mod+F3  hotkey-overlay-title=null {spawn-sh "pkill cava || true && pkill waybar || true &&  waybar -c $HOME/.config/waybar-niri-Win11Like/config.jsonc -s $HOME/.config/waybar-niri-Win11Like/style.css ";}
-    Mod+F5 hotkey-overlay-title="快速存档 Quick save" {spawn "quicksave";}
-    Mod+F8 hotkey-overlay-title="快速读档 Quick load" {spawn "quickload";}
-    Mod+F9 hotkey-overlay-title="切换护眼模式 Toggle sunset" {spawn "~/.local/bin/toggle-wlsunset";}
+    // quicksave/quickload 为自定义脚本，NixOS 中不可用，请自行实现
+    // Mod+F5 hotkey-overlay-title="快速存档 Quick save" {spawn "quicksave";}
+    // Mod+F8 hotkey-overlay-title="快速读档 Quick load" {spawn "quickload";}
+    Mod+F9 hotkey-overlay-title="切换护眼模式 Toggle sunset" {spawn-sh "pkill wlsunset || wlsunset -t 4000 -T 6500 -l 31.2 -L 121.5";}
 
-    // niri-sidebar扩展相关
+    // niri-sidebar扩展相关 (AUR 包，NixOS 不可用，已禁用)
     // 警告：这是实验性功能
     // 切换 移动聚焦窗口至侧边栏 （建议配合切换浮动聚焦的快捷键使用，我设置的是super+n）
-   Mod+Alt+S { spawn "~/.local/bin/niri-sidebar" "toggle-window"; }
-    Mod+M hotkey-overlay-title="收起窗口 Move to Sidebar" { spawn "~/.local/bin/niri-sidebar" "toggle-window"; }
+   // Mod+Alt+S { spawn "~/.local/bin/niri-sidebar" "toggle-window"; }
+    // Mod+M hotkey-overlay-title="收起窗口 Move to Sidebar" { spawn "~/.local/bin/niri-sidebar" "toggle-window"; }
     // 切换 收起/展开侧边栏
-    Mod+Alt+Z hotkey-overlay-title="展开/收起侧边栏 Toggle Sidebar" { spawn "~/.local/bin/niri-sidebar" "toggle-visibility";}
+    // Mod+Alt+Z hotkey-overlay-title="展开/收起侧边栏 Toggle Sidebar" { spawn "~/.local/bin/niri-sidebar" "toggle-visibility";}
     // 反向排序侧边栏
-    Mod+Alt+X hotkey-overlay-title=null { spawn "~/.local/bin/niri-sidebar" "flip";}
+    // Mod+Alt+X hotkey-overlay-title=null { spawn "~/.local/bin/niri-sidebar" "flip";}
     // 重新排列侧边栏中的窗口（侧边栏中的窗口本质是一个浮动窗口，你有时候可能会把它移动到别的地方
     // 例如 ctrl+c居中。此时按下此键可以重新排列）
-    Mod+Alt+R hotkey-overlay-title="重置侧边栏 Reorder Sidebar"  { spawn "~/.local/bin/niri-sidebar" "reorder"; }
+    // Mod+Alt+R hotkey-overlay-title="重置侧边栏 Reorder Sidebar"  { spawn "~/.local/bin/niri-sidebar" "reorder"; }
     
 
     // 这一行是用waybar自己支持的信号功能隐藏waybar，但进程没有退出，资源占用依旧有
@@ -54,7 +55,9 @@ binds {
     //打开浏览器
     Mod+B hotkey-overlay-title="浏览器 Browser" { spawn "firefox"; }        
     //启动蓝牙管理器
-    Mod+Shift+B hotkey-overlay-title="蓝牙 Bluetooth" { spawn "kitty" "--class" "bluetui" "-e" "bluetui";}
+    // bluetui 不在 nixpkgs 中，使用 blueman-manager 替代
+    // Mod+Shift+B hotkey-overlay-title="蓝牙 Bluetooth" { spawn "kitty" "--class" "bluetui" "-e" "bluetui";}
+    Mod+Shift+B hotkey-overlay-title="蓝牙 Bluetooth" { spawn "blueman-manager";}
     
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
@@ -73,8 +76,8 @@ binds {
     Mod+Alt+L hotkey-overlay-title="锁屏 Lock screen" { spawn-sh "hyprlock -c ~/.config/niri/hyprlock.conf"; } 
    // Mod+P hotkey-overlay-title=null { spawn-sh "hyprpicker -a && pw-play /usr/share/sounds/freedesktop/stereo/message.oga"; }
     //Mod+Alt+V  hotkey-overlay-title="剪贴板 Clipboard" {spawn-sh "copyq toggle || ~/.local/bin/clipse-gui || kitty --class clipse --single-instance -e clipse";}
-    // 这是我自己的剪贴板程序，对应aur包shorinclip-git
-    Mod+Alt+V hotkey-overlay-title="剪贴板 Clipboard" {spawn-sh "kitty --single-instance --class shorinclip -e shorinclip";} // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
+    // 这是我自己的剪贴板程序，对应aur包shorinclip-git (AUR 包，NixOS 不可用)
+    // Mod+Alt+V hotkey-overlay-title="剪贴板 Clipboard" {spawn-sh "kitty --single-instance --class shorinclip -e shorinclip";} // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
     // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
     // For example, this is a standard bind to toggle the screen reader (orca).
     Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }

@@ -53,7 +53,7 @@
     "spacing": 7,
     // 自定义图标
     //"icons": {
-    //     "blueman": "/home/shorin/.config/waybar/logo/bluetooth.png",
+    //     "blueman": "/home/alan/.config/waybar/logo/bluetooth.png",
     //},
   },
   //工作区和窗口名字
@@ -115,7 +115,8 @@
     "tooltip-format-connected": "󰂱 {device_alias}\n---\n左键：打开面板",
     //点击功能
     "on-click-right": "~/.config/waybar/scripts/toggle-bluetooth.sh",
-    "on-click": "kitty --class bluetui  -e bluetui",
+    // bluetui 不在 nixpkgs 中，使用 blueman-manager 替代
+    "on-click": "blueman-manager",
   },
   //左键循环切换性能模式
   "power-profiles-daemon": {
@@ -134,7 +135,7 @@
     "tooltip-format": "左键：快速截图（仅保存到剪贴板）\n右键：打开截图菜单\n中键：打开长截图菜单",
     "on-click": "~/.config/waybar/scripts/screenshot.sh",
     "on-click-right": "~/.config/waybar/scripts/power-screenshot.sh",
-    "on-click-middle": "wl-longshot"
+    "on-click-middle": "wl-longshot"  // AUR 包，NixOS 不可用
   },
   //录屏screenrec
   "custom/wfrec": {
@@ -143,8 +144,8 @@
     //"interval": 1,                 // 每秒刷新一次
     "signal": 9, // 与脚本里的 WAYBAR_SIG 对应
     "tooltip": true,
-    "on-click": "shorin-screenrec-menu toggle", // 左键：开始/停止
-    "on-click-right": "shorin-screenrec-menu stop"
+    "on-click": "~/.config/waybar/scripts/screenrec toggle", // 左键：开始/停止
+    "on-click-right": "~/.config/waybar/scripts/screenrec stop"
   },
   //声音模块
   "group/audio": {
@@ -332,12 +333,12 @@
     "format": "",
     "on-click": "makoctl restore",
   },
-  //control-center 
-  "custom/settings": {
-    "format": "",
-    "on-click": "better-control",
-    "tooltip-format": "左键：打开设置中心",
-  },
+  //control-center   (better-control 不在 nixpkgs 中，已禁用)
+  // "custom/settings": {
+  //   "format": "",
+  //   "on-click": "better-control",
+  //   "tooltip-format": "左键：打开设置中心",
+  // },
   //获取屏幕颜色colorpicker
   "custom/colorpicker": {
     "tooltip": true,
@@ -382,9 +383,9 @@
     },
     "exec": "~/.config/waybar/scripts/check-updates.sh",
     "restart-interval": 0,
-    "on-click": "kitty -e shorin sysup",
+    "on-click": "kitty -e sudo nixos-rebuild switch --flake ~/.dotfiles#vm",  // NixOS 替代 shorin sysup
     "on-click-middle": "pkill -SIGUSR1 -f ~/.config/waybar/scripts/check-updates.sh",
-    "on-click-right": "kitty --class floating-term  -e shorin checkallupdates" 
+    "on-click-right": "kitty --class floating-term -e nix flake update"  // NixOS 替代 shorin checkallupdates 
   },
   //隐私
   "privacy": {
@@ -426,11 +427,11 @@
   "dwl/window": {
     "format": "[{layout}]{title}",
   },
-  //剪贴板
+  //剪贴板 (cliphist-tui 不在 nixpkgs 中，改用 cliphist list + fuzzel)
   "custom/clipboard":{
     "format":"󰅍",
-    "on-click":"kitty --class cliphist-tui -e cliphist-tui",
-    "on-click-middle":"pkill wl-paste || true && wl-paste --watch cliphist store && sleep 0.5 && systemctl restart --user clipsync-git",
+    "on-click":"kitty --class cliphist-tui -e sh -c 'cliphist list | fuzzel --dmenu | cliphist decode | wl-copy'",
+    "on-click-middle":"pkill wl-paste || true && wl-paste --watch cliphist store",
     "on-click-right":"rm -f ~/.cache/cliphist/db",
     "tooltip-format":"左键：打开剪贴板\n右键：清除剪贴板历史\n中键：重启剪贴板后台服务"
   },

@@ -1,51 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ==============================================================================
-# 功能：Waybar 更新检测后台守护脚本
-# 特性：定期检查 Pacman 和 AUR 更新，生成 JSON 和 txt 供前端极速读取。
-# 修复：引入动态信号屏蔽与 FORCE_UPDATE 标志，完美解决高频触发导致的并发地狱。
+# NixOS 版 Waybar 更新检测脚本
+# 检查 flake 是否有可用更新，并显示上次系统构建时间
 # ==============================================================================
 
 set -euo pipefail
 
-# === 配置区域 ===
-CACHE_DIR="$HOME/.cache/shorin-check-arch-updates"
+CACHE_DIR="$HOME/.cache/nixos-update-check"
 CACHE_FILE="$CACHE_DIR/updates.json"
-LOCK_FILE="/tmp/waybar-updates.lock"
-MAX_LINES=50
+LOCK_FILE="/tmp/waybar-nix-updates.lock"
 CHECK_INTERVAL=3600
-PACMAN_LOG="/var/log/pacman.log"
 
-# 确保缓存目录存在
 mkdir -p "$CACHE_DIR"
 
-# 全局状态标志：0=按需检查，1=强制无视缓存检查
 FORCE_UPDATE=0
 
-# === 自动检测 AUR Helper ===
-if command -v paru &> /dev/null; then
-    AUR_HELPER="paru"
-elif command -v yay &> /dev/null; then
-    AUR_HELPER="yay"
-else
-    AUR_HELPER=""
-fi
-
-# === 信号处理函数 ===
-# 不再粗暴删除文件，仅修改标志位
 on_sigusr1() {
     FORCE_UPDATE=1
 }
-
-# 初始绑定信号
 trap 'on_sigusr1' SIGUSR1
 
-# === 上次系统更新时间 ===
 format_age() {
     local seconds=$1
-
-    if [[ "$seconds" -lt 0 ]]; then
-        seconds=0
-    fi
+    [[ "$seconds" -lt 0 ]] && seconds=0
 
     if [[ "$seconds" -lt 60 ]]; then
         printf '刚刚'
@@ -62,152 +39,82 @@ format_age() {
     fi
 }
 
-get_last_system_update_info() {
-    if [[ ! -r "$PACMAN_LOG" ]]; then
-        printf '上次系统更新：未知'
-        return
-    fi
-
-    local last_line timestamp last_update current_time age
-    # Count only full system upgrade commands, not AUR/local package upgrades.
-    last_line=$(tac "$PACMAN_LOG" 2>/dev/null | grep -m1 -E "\[PACMAN\] Running 'pacman ([^']*-S[^[:space:]']*u|[^']*-S[[:space:]][^']*[[:space:]](-u|--sysupgrade)|[^']*--sync[^']*[[:space:]](-u|--sysupgrade))" || true)
-
-    if [[ -z "$last_line" ]]; then
-        printf '上次系统更新：无记录'
-        return
-    fi
-
-    timestamp=${last_line%%]*}
-    timestamp=${timestamp#\[}
-    last_update=$(date -d "$timestamp" +%s 2>/dev/null || true)
-
-    if [[ -z "$last_update" ]]; then
-        printf '上次系统更新：未知'
-        return
-    fi
-
+get_last_build_info() {
+    local current_time age
     current_time=$(date +%s)
-    age=$((current_time - last_update))
-    printf '上次系统更新：%s' "$(format_age "$age")"
-}
 
-# === 生成 JSON 函数 ===
-generate_json() {
-    local updates=$1
-    local count
-    local last_update_info
-
-    last_update_info=$(get_last_system_update_info)
-    
-    updates=$(echo "$updates" | grep -v '^\s*$' || true)
-    
-    if [[ -z "$updates" ]]; then
-        count=0
-        printf '{"text": "", "alt": "updated", "tooltip": "System is up to date\\n----------------\\n%s"}\n' "$last_update_info"
-        return
-    else
-        count=$(echo "$updates" | wc -l)
-    fi
-
-    local tooltip_text=""
-    if [[ "$count" -gt "$MAX_LINES" ]]; then
-        local remainder=$((count - MAX_LINES))
-        local top_list=$(echo "$updates" | head -n "$MAX_LINES")
-        local escaped_list=$(echo "$top_list" | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' )
-        tooltip_text="${escaped_list}----------------\\n<b>⚠️ ... and ${remainder} more updates</b>"
-    else
-        tooltip_text=$(echo "$updates" | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' | head -c -2 || true)
-    fi
-
-    tooltip_text="${tooltip_text}\\n----------------\\n${last_update_info}"
-
-    printf '{"text": "%s", "alt": "has-updates", "tooltip": "%s"}\n' "$count" "$tooltip_text"
-}
-
-# === 从缓存文本重新生成输出，避免 tooltip 的相对时间被 JSON 缓存卡住 ===
-emit_cached_json() {
-    local repo_cache="${CACHE_FILE%.json}-repo.txt"
-    local aur_cache="${CACHE_FILE%.json}-aur.txt"
-    local REPO_UPDATES=""
-    local AUR_UPDATES=""
-    local ALL_UPDATES=""
-
-    if [[ ! -f "$repo_cache" && ! -f "$aur_cache" ]]; then
-        cat "$CACHE_FILE"
-        return
-    fi
-
-    if [[ -f "$repo_cache" ]]; then
-        REPO_UPDATES=$(<"$repo_cache")
-    fi
-
-    if [[ -f "$aur_cache" ]]; then
-        AUR_UPDATES=$(<"$aur_cache")
-    fi
-
-    if [[ -n "$REPO_UPDATES" ]] && [[ -n "$AUR_UPDATES" ]]; then
-        ALL_UPDATES="$REPO_UPDATES"$'\n'"$AUR_UPDATES"
-    elif [[ -n "$REPO_UPDATES" ]]; then
-        ALL_UPDATES="$REPO_UPDATES"
-    else
-        ALL_UPDATES="$AUR_UPDATES"
-    fi
-
-    generate_json "$ALL_UPDATES"
-}
-
-# === 真正的检查逻辑 ===
-perform_update_check() {
-    local REPO_UPDATES=""
-    local STATUS=0
-    REPO_UPDATES=$(checkupdates 2>/dev/null) || STATUS=$?
-
-    local AUR_UPDATES=""
-    if [[ -n "$AUR_HELPER" ]]; then
-        AUR_UPDATES=$("$AUR_HELPER" -Qua 2>/dev/null || true)
-    fi
-
-    local ALL_UPDATES=""
-    if [[ $STATUS -eq 0 ]] || [[ $STATUS -eq 2 ]]; then
-        if [[ -n "$REPO_UPDATES" ]] && [[ -n "$AUR_UPDATES" ]]; then
-            ALL_UPDATES="$REPO_UPDATES"$'\n'"$AUR_UPDATES"
-        elif [[ -n "$REPO_UPDATES" ]]; then
-            ALL_UPDATES="$REPO_UPDATES"
-        else
-            ALL_UPDATES="$AUR_UPDATES"
+    # 检查当前系统构建时间
+    if [[ -d /nix/var/nix/profiles/system ]]; then
+        local build_time
+        build_time=$(stat -c %Y /nix/var/nix/profiles/system 2>/dev/null || true)
+        if [[ -n "$build_time" ]]; then
+            age=$((current_time - build_time))
+            printf '上次系统构建：%s' "$(format_age "$age")"
+            return
         fi
-        
-        echo "$REPO_UPDATES" > "${CACHE_FILE%.json}-repo.txt"
-        echo "$AUR_UPDATES" > "${CACHE_FILE%.json}-aur.txt"
-        generate_json "$ALL_UPDATES" > "$CACHE_FILE"
+    fi
+    printf '上次系统构建：未知'
+}
+
+generate_json() {
+    local count="${1:-0}"
+    local last_update_info
+    last_update_info=$(get_last_build_info)
+
+    if [[ "$count" -eq 0 ]]; then
+        printf '{"text": "", "alt": "updated", "tooltip": "系统已是最新\\n----------------\\n%s"}\n' "$last_update_info"
     else
-        return 1
+        printf '{"text": "%s", "alt": "has-updates", "tooltip": "有 %s 个 flake 输入可更新\\n----------------\\n%s"}\n' "$count" "$count" "$last_update_info"
     fi
 }
 
-# === 主控制逻辑 ===
+perform_update_check() {
+    local count=0
+
+    # 检查 flake.lock 是否有更新（需要网络）
+    if command -v nix &>/dev/null && [[ -f "$HOME/.dotfiles/flake.lock" ]]; then
+        local flake_dir="$HOME/.dotfiles"
+        local check_output
+        # 使用 flake update --dry-run 检查（如果网络不通则跳过）
+        check_output=$(cd "$flake_dir" && nix flake update --dry-run 2>&1) || true
+        if echo "$check_output" | grep -q "would update"; then
+            count=$(echo "$check_output" | grep -c "would update" || true)
+        fi
+    fi
+
+    generate_json "$count" > "$CACHE_FILE"
+}
+
+emit_cached_json() {
+    if [[ -f "$CACHE_FILE" ]]; then
+        # 重新生成 tooltip（时间会更新）
+        local count=0
+        # 从缓存提取 count
+        if grep -q '"has-updates"' "$CACHE_FILE" 2>/dev/null; then
+            count=$(grep -oP '(?<="text": ")[0-9]+' "$CACHE_FILE" 2>/dev/null || echo 0)
+        fi
+        generate_json "$count"
+    else
+        generate_json 0
+    fi
+}
+
 run_check() {
-    # 1. 检查缓存是否新鲜 (如果收到刷新信号 FORCE_UPDATE=1，则跳过判断)
     if [[ $FORCE_UPDATE -eq 0 ]] && [[ -f "$CACHE_FILE" ]]; then
         local current_time file_time age
         current_time=$(date +%s)
         file_time=$(stat -c %Y "$CACHE_FILE")
         age=$((current_time - file_time))
-        
+
         if [[ $age -lt $((CHECK_INTERVAL - 10)) ]]; then
             emit_cached_json
             return
         fi
     fi
 
-    # 准备干脏活累活前，重置标志位
     FORCE_UPDATE=0
-    
-    # 【核心修复】：动态屏蔽 SIGUSR1 信号！
-    # 在执行耗时的网络和数据库操作时，无视一切 Ctrl+R 带来的外部干扰。
     trap '' SIGUSR1
 
-    # 2. 获取锁进行更新
     (
         if flock -x -n 9; then
             perform_update_check || true
@@ -216,22 +123,18 @@ run_check() {
         fi
     ) 9>"$LOCK_FILE" || true
 
-    # 【核心修复】：干完活了，重新恢复对 SIGUSR1 信号的监听
     trap 'on_sigusr1' SIGUSR1
 
-    # 3. 最终输出缓存内容
     if [[ -f "$CACHE_FILE" ]]; then
         emit_cached_json
     else
-        printf '{"text": "...", "alt": "updated", "tooltip": "Checking...\\n----------------\\n%s"}\n' "$(get_last_system_update_info)"
+        generate_json 0
     fi
 }
 
-# === 主循环 ===
+# 主循环
 while true; do
     run_check
     sleep "$CHECK_INTERVAL" &
-    
-    # 即使 sleep 被信号强行打断，|| true 也能保住脚本的命
     wait $! || true
 done

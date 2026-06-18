@@ -14,6 +14,6 @@
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
 
-  # 不要修改这个版本号
-  system.stateVersion = "26.05"; 
+  # 不要修改这个版本号（已修正为实际安装时的 NixOS 版本）
+  system.stateVersion = "25.11";
 }

@@ -51,16 +51,15 @@ window-rule {
     match app-id="imv"
     open-floating true
     }
-//shorinclip剪贴板TUI 
-window-rule{
-	match app-id="shorinclip"
-	match app-id="cliphist-tui"
-	default-column-width { fixed 625; }
-    default-window-height { fixed 700; }
-    //min-height 800
-	open-floating true
-	default-floating-position x=0 y=18 relative-to="top"
-}
+//shorinclip剪贴板TUI (AUR 包，NixOS 不可用，规则已禁用)
+// window-rule{
+// 	match app-id="shorinclip"
+// 	match app-id="cliphist-tui"
+// 	default-column-width { fixed 625; }
+//     default-window-height { fixed 700; }
+// 	open-floating true
+// 	default-floating-position x=0 y=18 relative-to="top"
+// }
 // bilibili webapp 的窗口规则，以标签页模式打开
 window-rule{
 	match app-id="WebApp-bilibili8002"
@@ -105,8 +104,9 @@ window-rule {
     match app-id="org.gnome.Calculator"
     match app-id="floating-mpv"
     match app-id="thunar"
-    match app-id="io.github.shorin.proton_wrapper_configure"
-    match app-id="io.github.shorin.proton_wrapper_manager"
+    // AUR 包，NixOS 不可用
+    // match app-id="io.github.shorin.proton_wrapper_configure"
+    // match app-id="io.github.shorin.proton_wrapper_manager"
     open-floating true
 }
 // 开启后不聚焦的窗口
@@ -138,7 +138,7 @@ window-rule {
 	default-floating-position x=20 y=20 relative-to="top"
 }
 window-rule{
-    match app-id="bluetui"
+    // match app-id="bluetui"  # AUR 包，NixOS 不可用
     match app-id="impala"
     match app-id="network-tui"
 default-column-width { fixed 800; }

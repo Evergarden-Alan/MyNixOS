@@ -88,7 +88,32 @@
     wl-clipboard
     hyprlock
     waypaper
-    awww
+    awww           # 壁纸守护进程 (swww 已更名为 awww v0.12.0)
+    waybar         # 任务栏 (niri 启动时自动 spawn)
+    cava           # 音频可视化 (waybar 模块)
+
+    # --- 通知与输入 ---
+    mako              # 通知守护进程
+    libnotify         # notify-send 命令
+    fcitx5            # 输入法框架
+    fcitx5-gtk        # GTK 输入法模块
+    polkit_gnome      # 身份验证代理 (polkit agent)
+
+    # --- 系统工具 ---
+    brightnessctl      # 屏幕亮度控制
+    ddcutil            # 外接显示器亮度 (DDC/CI)
+    playerctl          # 媒体播放控制
+    pavucontrol        # 音频面板 (GUI)
+    wlogout            # 电源菜单
+    hyprpicker         # 颜色拾取器
+    networkmanagerapplet  # nm-connection-editor (网络连接编辑器)
+
+    # --- 截图与录屏 ---
+    grim           # Wayland 截图
+    slurp          # 区域选择
+    wf-recorder    # Wayland 录屏
+    wl-screenrec   # Wayland 录屏 (GPU 加速)
+    ffmpeg         # 视频/音频处理
 
     # --- 终端与系统工具 ---
     alacritty
@@ -99,11 +124,22 @@
     tree
     eza
     bat
-    
+    zellij         # 终端复用器
+    pulseaudio-utils  # pactl 命令
+
+    # --- 蓝牙与显示 ---
+    blueman        # 蓝牙管理器 (GUI)
+    wlsunset       # 护眼模式 (夜晚色温)
+    xorg.xhost     # xhost 命令 (允许 root 通过用户 X11 打开窗口)
+
+    # --- 娱乐 ---
+    sl             # 火车动画
+    lolcat         # 彩虹输出
+
     # --- 生产力 ---
     vscode
     #obsidian
-    
+
     # --- 运行环境 ---
     nodejs      # 提供 node 和 npm 环境，用于后续部署 claude-code
   ];
@@ -151,5 +187,5 @@
   xdg.configFile."waybar".source = 
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/config/waybar";
 
-   programs.home-manager.enable = true;
+  programs.home-manager.enable = true;
 }

@@ -35,7 +35,10 @@
 # 全局启用 SSH 服务
   services.openssh = {
     enable = true;
-    # 推荐的科学配置：通常建议开启密码登录或配置好 authorizedKeys，避免把自己锁在外面
-    settings.PasswordAuthentication = true; 
+    # 安全建议：禁用密码登录，使用密钥认证
+    # 如需临时开启密码登录，请在使用后立即关闭
+    settings.PasswordAuthentication = false;
+    # 添加你的 SSH 公钥（替换为实际公钥）：
+    # openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3... alan@nixos" ];
   };
 }

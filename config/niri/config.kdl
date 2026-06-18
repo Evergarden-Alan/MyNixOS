@@ -197,26 +197,26 @@ spawn-at-startup "fcitx5"
 // 剪贴板守护进程
 	//cliphist
 spawn-at-startup "wl-paste" "--watch" "cliphist" "store"
-	// wayland <--> x11 剪贴板同步 这个包是我自己推的clipsync-git
-spawn-at-startup "systemctl" "--user" "start" "linuxqq-clipsync"
+	// wayland <--> x11 剪贴板同步 (AUR 包 clipsync-git，NixOS 不可用)
+// spawn-at-startup "systemctl" "--user" "start" "linuxqq-clipsync"
 // 闲置时自动熄屏锁屏睡眠的脚本
 // spawn-at-startup "~/.config/niri/scripts/swayidle.sh"
 // 大写锁定键的osd显示
 spawn-at-startup "swayosd-server"
-// 自动开启护眼模式,经纬度设置位置
-spawn-at-startup "~/.local/bin/toggle-wlsunset"
+// 自动开启护眼模式（wlsunset 已加入 home.packages，脚本需自行创建）
+// spawn-at-startup "~/.local/bin/toggle-wlsunset"
 // 截图音效的守护进程
 spawn-at-startup "~/.config/niri/scripts/screenshot-sound.sh"
 // alt+tab切换器（这是一个第三方，无缩略图显示的切换器）
 //spawn-at-startup "niriswitcher"
-// niri-siderbar
-spawn-at-startup "~/.local/bin/niri-sidebar" "listen"
+// niri-siderbar (AUR 包，NixOS 不可用)
+// spawn-at-startup "~/.local/bin/niri-sidebar" "listen"
 // 允许root通过用户的xwayland打开窗口
 spawn-at-startup "xhost" "+si:localuser:root"
 // 音频调整程序，easyeffects，-w可以在后台启动
 //spawn-at-startup "flatpak" "run" "com.github.wwmm.easyeffects" "-w"
 // nirius
-spawn-at-startup "niriusd"
+// spawn-at-startup "niriusd"  # AUR 包，NixOS 不可用
 
 // 取消启动niri时自动开启快捷键教程
 hotkey-overlay {

@@ -5,9 +5,12 @@
   # -----------------
   # 1. 基础图形与显示管理器
   # -----------------
+  # 注意：GDM 目前依赖 xserver 模块，即使主要使用 Wayland（Niri）
   services.xserver.enable = true;
-  # 使用 GDM 作为登录界面，它能完美同时支持 GNOME 和 Niri
+  # 使用 GDM 作为登录界面，同时支持 GNOME 和 Niri
   services.displayManager.gdm.enable = true;
+  # 优先使用 Wayland 模式（对 Niri 必要，GNOME 也推荐）
+  services.displayManager.gdm.wayland = true;
   services.xserver.xkb = {
     layout = "cn";
     variant = "";

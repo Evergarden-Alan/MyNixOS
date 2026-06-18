@@ -1,0 +1,32 @@
+# Nix build results
+result
+result-*
+
+# Secrets and environment files
+.env
+.env.local
+.secrets
+*.secret
+*_secret
+credentials
+**/api_keys
+**/tokens
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Fish shell sensitive variables
+config/fish/fish_variables
+
+# Temporary files
+*.tmp
+*.bak
+*.log
