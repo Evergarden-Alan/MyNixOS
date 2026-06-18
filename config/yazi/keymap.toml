@@ -1,0 +1,9 @@
+[[manager.prepend_keymap]]
+on   = [ "Q" ]
+exec = "quit --fp"
+desc = "退出并切换到当前目录 (Fish 联动)"
+
+[[manager.prepend_keymap]]
+on   = [ "q" ]
+exec = "quit"
+desc = "直接退出，不切换目录"

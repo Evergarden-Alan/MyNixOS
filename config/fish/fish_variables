@@ -1,0 +1,5 @@
+# This file contains fish universal variable definitions.
+# VERSION: 3.0
+SETUVAR --export PYENV_ROOT:/home/alan/\x2epyenv
+SETUVAR __fish_initialized:4300
+SETUVAR fish_user_paths:/home/alan/\x2enpm\x2dglobal/bin
