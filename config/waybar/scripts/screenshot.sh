@@ -4,5 +4,6 @@ COORDS=$(slurp)
 if [ -z "$COORDS" ]; then
     exit 0
 fi
-pw-play /usr/share/sounds/freedesktop/stereo/camera-shutter.oga > /dev/null 2>&1 & 
+SOUND=$(for p in /run/current-system/sw/share/sounds/freedesktop/stereo/camera-shutter.oga /nix/store/*/share/sounds/freedesktop/stereo/camera-shutter.oga /usr/share/sounds/freedesktop/stereo/camera-shutter.oga; do [[ -f "$p" ]] && { echo "$p"; break; }; done)
+[ -n "$SOUND" ] && pw-play "$SOUND" > /dev/null 2>&1 &
 grim -g "$COORDS" - | wl-copy && notify-send "Screenshot" "copy to clipboard"

@@ -1,0 +1,15 @@
+此目录包含 mihomo (Clash Meta) 代理内核及路由数据库。
+
+文件:
+  mihomo-linux-amd64-v*.gz  — 内核压缩包 (Live ISO 上由 start-proxy.sh 解压到 /tmp)
+  country.mmdb              — GeoIP 国家数据库
+  geoip.metadb              — Meta GeoIP 数据库
+  geosite.dat               — 站点分类数据库 (GEOSITE 规则用)
+
+内核更新:
+  从 https://github.com/MetaCubeX/mihomo/releases
+  下载 linux-amd64 版本,替换旧的 .gz 文件。
+
+geo 数据库更新:
+  从 https://github.com/MetaCubeX/meta-rules-dat/releases
+  下载 geoip.metadb / geosite.dat / country.mmdb。

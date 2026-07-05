@@ -66,7 +66,7 @@ fi
 case "$SELECTED" in
     "更新系统 (nixos-rebuild switch)")
         kitty --single-instance --class command-center --title "系统更新" \
-            bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles#vm; echo; echo '按任意键退出...'; read -n 1 -s -r"
+            bash -c "sudo nixos-rebuild switch --flake ~/.dotfiles#$(hostname); echo; echo '按任意键退出...'; read -n 1 -s -r"
         ;;
     "更新 Flake 依赖 (nix flake update)")
         kitty --single-instance --class command-center --title "Flake 更新" \

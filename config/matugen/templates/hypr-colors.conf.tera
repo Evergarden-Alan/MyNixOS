@@ -1,0 +1,8 @@
+# 由 Matugen 生成 —— Hyprlock 配色变量
+$surface = {{colors.surface.default.hex}}
+$primary = {{colors.primary.default.hex}}
+$secondary = {{colors.secondary.default.hex}}
+$tertiary = {{colors.tertiary.default.hex}}
+$error = {{colors.error.default.hex}}
+$on_surface = {{colors.on_surface.default.hex}}
+$surface_container = {{colors.surface_container.default.hex}}

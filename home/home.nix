@@ -1,43 +1,36 @@
 # ~/.dotfiles/home/home.nix
-{ config, pkgs, ... }:
+{ config, pkgs, lib, inputs, myUsername, ... }:
 
 {
   # ---------------------------------------------------
   # 基础信息配置
   # ---------------------------------------------------
-  home.username = "alan";
-  home.homeDirectory = "/home/alan";
-  home.stateVersion = "24.05";
+  home.username = myUsername;
+  home.homeDirectory = "/home/${myUsername}";
+  home.stateVersion = "25.05";
 
   # ---------------------------------------------------
-  # 环境变量与路径重定向 (专为 Node.js 跨平台部署准备)
+  # 环境变量与路径
   # ---------------------------------------------------
   home.sessionVariables = {
-    # 将 npm 全局安装路径重定向到用户目录，避免只读文件系统报错
     NPM_CONFIG_PREFIX = "${config.home.homeDirectory}/.npm-global";
   };
-
   home.sessionPath = [
-    # 确保通过 npm 全局安装的工具 (如 claude-code) 可以直接在终端运行
     "${config.home.homeDirectory}/.npm-global/bin"
   ];
 
   # ---------------------------------------------------
-  # 原生 Nix 模块：Git (极简版)
+  # Git
   # ---------------------------------------------------
   programs.git = {
     enable = true;
     settings.user.name = "Alan";
     settings.user.email = "ve1.11@outlook.com";
-    # 代理暂时封印，需要时再打开
-    # extraConfig.http.proxy = "http://127.0.0.1:7890";
-    # extraConfig.https.proxy = "http://127.0.0.1:7890";
   };
-  
   programs.git.lfs.enable = true;
 
   # ---------------------------------------------------
-  # 原生 Nix 模块：Vim
+  # Vim
   # ---------------------------------------------------
   programs.vim = {
     enable = true;
@@ -60,7 +53,7 @@
   };
 
   # ---------------------------------------------------
-  # 原生 Nix 模块：终端生态 (Fish 全家桶)
+  # 终端生态 (Fish 全家桶)
   # ---------------------------------------------------
   programs.fish.enable = true;
   programs.starship = {
@@ -74,7 +67,6 @@
   programs.yazi = {
     enable = true;
     shellWrapperName = "y";
-
   };
 
   # ---------------------------------------------------
@@ -87,33 +79,35 @@
     cliphist
     wl-clipboard
     hyprlock
+    swaylock        # hyprlock 的 fallback
+    swaybg          # 壁纸 (nixpkgs 中 swww 已损坏，上游改名 awww 但 nixpkgs 未跟进)
     waypaper
-    awww           # 壁纸守护进程 (swww 已更名为 awww v0.12.0)
-    waybar         # 任务栏 (niri 启动时自动 spawn)
-    cava           # 音频可视化 (waybar 模块)
+    waybar
+    cava
 
-    # --- 通知与输入 ---
-    mako              # 通知守护进程
-    libnotify         # notify-send 命令
-    fcitx5            # 输入法框架
-    fcitx5-gtk        # GTK 输入法模块
-    polkit_gnome      # 身份验证代理 (polkit agent)
+    # --- 通知与输入 (fcitx5 本体由 i18n.inputMethod 系统级提供) ---
+    mako
+    libnotify
+    fcitx5-gtk
+    polkit_gnome
 
     # --- 系统工具 ---
-    brightnessctl      # 屏幕亮度控制
-    ddcutil            # 外接显示器亮度 (DDC/CI)
-    playerctl          # 媒体播放控制
-    pavucontrol        # 音频面板 (GUI)
-    wlogout            # 电源菜单
-    hyprpicker         # 颜色拾取器
-    networkmanagerapplet  # nm-connection-editor (网络连接编辑器)
+    brightnessctl
+    ddcutil
+    playerctl
+    pavucontrol
+    wlogout
+    hyprpicker
+    networkmanagerapplet
 
     # --- 截图与录屏 ---
-    grim           # Wayland 截图
-    slurp          # 区域选择
-    wf-recorder    # Wayland 录屏
-    wl-screenrec   # Wayland 录屏 (GPU 加速)
-    ffmpeg         # 视频/音频处理
+    grim
+    slurp
+    wf-recorder
+    wl-screenrec
+    ffmpeg
+    satty           # 截图编辑器 (power-screenshot.sh 用)
+    swappy          # 截图编辑器备选
 
     # --- 终端与系统工具 ---
     alacritty
@@ -124,68 +118,93 @@
     tree
     eza
     bat
-    zellij         # 终端复用器
-    pulseaudio-utils  # pactl 命令
+    zellij
+    pulseaudio-utils
+    fzf
+    jq
+    file
 
     # --- 蓝牙与显示 ---
-    blueman        # 蓝牙管理器 (GUI)
-    wlsunset       # 护眼模式 (夜晚色温)
-    xorg.xhost     # xhost 命令 (允许 root 通过用户 X11 打开窗口)
+    blueman
+    wlsunset
+    xorg.xhost
+    xorg.xprop      # niri-force-kill-window 用
+
+    # --- 网络/下载 (f.fish waifu 抓图用) ---
+    curl
+
+    # --- 声音主题 (截图/错误音效，脚本通过 find 在 nix store 定位) ---
+    sound-theme-freedesktop
+
+    # --- 字体 (nerdfonts 已在 modules/desktop.nix fonts.packages 中，此处只补未在那里的) ---
+    lxgw-wenkai
 
     # --- 娱乐 ---
-    sl             # 火车动画
-    lolcat         # 彩虹输出
+    sl
+    lolcat
 
     # --- 生产力 ---
     vscode
-    #obsidian
 
     # --- 运行环境 ---
-    nodejs      # 提供 node 和 npm 环境，用于后续部署 claude-code
+    nodejs
+
+    # --- Matugen (Material You 配色生成) ---
+    inputs.matugen.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   # ---------------------------------------------------
-  # 软链接接管区 (将本地大本营的配置链接到 ~/.config)
+  # polkit 认证代理 (systemd user service，供 niri 启动)
+  # ---------------------------------------------------
+  systemd.user.services.polkit-gnome-authentication-agent-1 = {
+    Unit = {
+      Description = "polkit-gnome-authentication-agent-1";
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+      Restart = "on-failure";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
+  # ---------------------------------------------------
+  # 软链接接管区
   # ---------------------------------------------------
 
-  # === 1. 纯 UI / 独立工具 (安全：直接软链接整个文件夹) ===
+  # === 1. 纯 UI / 独立工具 (Nix Store 软链接) ===
   xdg.configFile."btop".source = ../config/btop;
   xdg.configFile."fastfetch".source = ../config/fastfetch;
   xdg.configFile."fuzzel".source = ../config/fuzzel;
   xdg.configFile."kitty".source = ../config/kitty;
   xdg.configFile."waypaper".source = ../config/waypaper;
-  #xdg.configFile."niri".source = ../config/niri;
-  #xdg.configFile."waybar".source = ../config/waybar;
+  xdg.configFile."matugen".source = ../config/matugen;
 
-  # === 2. 已被 Nix 接管的工具 (避坑：精准软链接，防止冲突) ===
-  
-  # 【Starship】
-  # 只要不在 programs.starship 里写 settings，HM 就不会生成这个文件，直接链过去即可
+  # === 2. 已被 Nix 接管的工具 (精准软链接) ===
   xdg.configFile."starship.toml".source = ../config/starship.toml;
-
-  # 【Yazi】
-  # 为了保留 yazi 的终端自动 cd 魔法，我们保留程序的接管，仅软链接具体的文件和插件
   xdg.configFile."yazi/theme.toml".source = ../config/yazi/theme.toml;
-  # 如果你有 lua 插件，把这两行也解开：
-  # xdg.configFile."yazi/init.lua".source = ../config/yazi/init.lua;
-  # xdg.configFile."yazi/plugins".source = ../config/yazi/plugins;
 
-
-  # ---------------------------------------------------
-  # 软链接接管区 (动态修改，即时生效版)
-  # ---------------------------------------------------
-
-  # 注意：使用 mkOutOfStoreSymlink 必须写绝对路径！
-  # 我们用 ${config.home.homeDirectory} 来动态获取你的 /home/alan
-  
-  xdg.configFile."fish/conf.d/my_arch_config.fish".source = 
+  # === 3. 即时生效区 (mkOutOfStoreSymlink，编辑后无需 rebuild) ===
+  xdg.configFile."fish/conf.d/my_arch_config.fish".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/config/fish/config.fish";
-    
-  xdg.configFile."niri".source = 
+  xdg.configFile."niri".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/config/niri";
-    
-  xdg.configFile."waybar".source = 
+  xdg.configFile."waybar".source =
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/config/waybar";
+  xdg.configFile."scripts".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.dotfiles/config/scripts";
+
+  # ---------------------------------------------------
+  # 让脚本可执行 (mkOutOfStoreSymlink 不保留 +x)
+  # ---------------------------------------------------
+  home.activation.makeScriptsExecutable = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    $DRY_RUN_CMD chmod +x \
+      ${config.home.homeDirectory}/.dotfiles/config/niri/scripts/* \
+      ${config.home.homeDirectory}/.dotfiles/config/waybar/scripts/* \
+      ${config.home.homeDirectory}/.dotfiles/config/scripts/* \
+      2>/dev/null || true
+  '';
 
   programs.home-manager.enable = true;
 }

@@ -77,8 +77,8 @@ perform_update_check() {
         local check_output
         # 使用 flake update --dry-run 检查（如果网络不通则跳过）
         check_output=$(cd "$flake_dir" && nix flake update --dry-run 2>&1) || true
-        if echo "$check_output" | grep -q "would update"; then
-            count=$(echo "$check_output" | grep -c "would update" || true)
+        if echo "$check_output" | grep -qi "would update"; then
+            count=$(echo "$check_output" | grep -ci "would update" || true)
         fi
     fi
 

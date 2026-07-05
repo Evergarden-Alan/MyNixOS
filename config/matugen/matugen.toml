@@ -1,0 +1,24 @@
+# ~/.dotfiles/config/matugen/matugen.toml
+# Matugen 配置 —— 从壁纸生成 Material You 配色
+# 用法: matugen image <壁纸路径>  (读此文件，按 templates 生成)
+# 脚本 config/scripts/matugen-update.sh 封装了完整流程
+
+[config]
+# 生成后重载应用
+reload_apps = true
+reload_apps_list = ["waybar"]
+
+# ===== Waybar 配色 =====
+[templates.waybar-colors]
+input_path = "~/.config/matugen/templates/colors.css.tera"
+output_path = "~/.config/waybar/colors.css"
+
+# ===== Niri 配色 (窗口边框等) =====
+[templates.niri-colors]
+input_path = "~/.config/matugen/templates/colors.kdl.tera"
+output_path = "~/.config/niri/colors.kdl"
+
+# ===== Hyprlock 配色 =====
+[templates.hyprlock-colors]
+input_path = "~/.config/matugen/templates/hypr-colors.conf.tera"
+output_path = "~/.config/niri/hypr-colors.conf"

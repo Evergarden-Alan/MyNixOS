@@ -1,0 +1,4 @@
+# 此文件为占位符。实际部署时请用 nixos-generate-config 生成的
+# hardware-configuration.nix 覆盖同目录下的 hardware-configuration.nix。
+# 该文件包含磁盘 UUID、文件系统布局、内核模块等机器特有信息，
+# 是整个配置中唯一必须按机器替换的文件。

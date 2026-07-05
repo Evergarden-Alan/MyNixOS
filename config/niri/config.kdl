@@ -174,18 +174,18 @@ overview {
 
 // This line starts waybar, a commonly used bar for Wayland compositors.
 // 自动启动设置
-// 桌面壁纸的守护进程
-spawn-at-startup "awww-daemon"
-// 总览界面背景壁纸的守护进程
-spawn-at-startup "awww-daemon" "-n" "overview"
-// 随机更换一张壁纸
+// 配色生成 (在 waybar/hyprlock 启动前生成 colors.css/colors.kdl/hypr-colors.conf)
+spawn-sh-at-startup "~/.config/scripts/matugen-update.sh"
+// 壁纸: swaybg 由 waypaper 按需调用 (无需守护进程)
+// swww → awww 重命名待 nixpkgs 跟进后再切回动画壁纸
+// 随机更换一张壁纸 (swaybg 后端每次直接画)
 spawn-sh-at-startup "sleep 1 &&  waypaper --random"
 // 恢复壁纸
 //spawn-at-startup "waypaper" "--restore"
-// 询问管理员权限功能（身份验证）
-spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-// 屏幕分享、录屏相关的环境设置,如果屏幕分享出异常的话可以开启
- spawn-sh-at-startup "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=niri & /usr/lib/xdg-desktop-portal-gnome"
+// 询问管理员权限功能（polkit 认证代理，由 home-manager 的 systemd user service 提供）
+spawn-sh-at-startup "systemctl --user start polkit-gnome-authentication-agent-1 2>/dev/null || true"
+// 屏幕分享、录屏相关的环境设置 (portal 本身由 NixOS xdg.portal 模块以 systemd 启动)
+spawn-sh-at-startup "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=niri"
 // GNOME tracker修复
 spawn-sh-at-startup "systemctl --user set-environment XDG_SESSION_CLASS=user"
 // 通知程序

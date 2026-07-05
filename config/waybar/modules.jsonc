@@ -27,8 +27,8 @@
     "format": "󰥔 {:%H:%M}",
     "tooltip-format": "{:%Y/%m/%d %A}\n---\n左键：打开时钟\n右键：打开日历",
     "max-length": 25,
-    "on-click": "gnome-clocks",
-    "on-click-right": "gnome-calendar",
+    "on-click": "",  // gnome-clocks 未安装
+    "on-click-right": "",  // gnome-calendar 未安装
   },
   "clock#date": {
     // "interval":
@@ -44,7 +44,7 @@
     // "on-scroll-down":
     // "smooth-scrolling-threshold":
     // "tooltip":
-    "on-click": "gnome-calendar",
+    "on-click": "",  // gnome-calendar 未安装
     "tooltip-format": "{:%Y/%m/%d %A}",
   },
   //正在运行的软件
@@ -135,7 +135,7 @@
     "tooltip-format": "左键：快速截图（仅保存到剪贴板）\n右键：打开截图菜单\n中键：打开长截图菜单",
     "on-click": "~/.config/waybar/scripts/screenshot.sh",
     "on-click-right": "~/.config/waybar/scripts/power-screenshot.sh",
-    "on-click-middle": "wl-longshot"  // AUR 包，NixOS 不可用
+    "on-click-middle": ""  // wl-longshot AUR 包，NixOS 不可用，已禁用
   },
   //录屏screenrec
   "custom/wfrec": {
@@ -383,7 +383,7 @@
     },
     "exec": "~/.config/waybar/scripts/check-updates.sh",
     "restart-interval": 0,
-    "on-click": "kitty -e sudo nixos-rebuild switch --flake ~/.dotfiles#vm",  // NixOS 替代 shorin sysup
+    "on-click": "kitty -e sudo nixos-rebuild switch --flake ~/.dotfiles#$(hostname)",  // 主机名=hosts目录名
     "on-click-middle": "pkill -SIGUSR1 -f ~/.config/waybar/scripts/check-updates.sh",
     "on-click-right": "kitty --class floating-term -e nix flake update"  // NixOS 替代 shorin checkallupdates 
   },

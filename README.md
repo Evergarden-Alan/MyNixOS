@@ -9,45 +9,82 @@
 | **发行版** | NixOS (unstable) |
 | **显示管理器** | GDM (Wayland) |
 | **桌面环境** | GNOME + Niri (平铺窗口管理器) |
+| **引导器** | systemd-boot (全新) / rEFInd (双系统) |
 | **Shell** | Fish + Starship |
 | **终端** | Kitty / Alacritty |
 | **任务栏** | Waybar |
 | **通知** | Mako |
 | **输入法** | Fcitx5 |
 | **音频** | PipeWire |
+| **壁纸** | swaybg + waypaper + matugen 自动配色 |
+| **代理** | mihomo 内核 + 订阅 (大陆网络) |
 | **编辑器** | VSCode / Vim |
 
 ## 📁 目录结构
 
 ```
 .
-├── flake.nix                  # Flake 入口：定义输入和输出
+├── flake.nix                  # Flake 入口：自动发现 hosts/ 下所有主机
 ├── flake.lock                 # 依赖版本锁定文件
+├── bootstrap.sh               # 【新】全自动安装脚本 (Live ISO 中运行)
 ├── hosts/
+│   ├── _template/             # 新主机模板 (cp -r 后改名，改一行即可)
+│   │   ├── configuration.nix
+│   │   └── hardware-configuration.nix.placeholder
 │   └── vm/
 │       ├── configuration.nix  # 系统级配置（引导、网络、主机名）
 │       └── hardware-configuration.nix  # 自动生成的硬件配置（机器相关）
 ├── modules/
-│   ├── core.nix               # 核心系统模块（时区、用户、SSH）
-│   └── desktop.nix            # 桌面环境模块（GDM、GNOME、Niri、PipeWire）
+│   ├── options.nix            # 【新】全局参数 (my.username / my.fullName)
+│   ├── core.nix               # 核心系统模块（时区、用户、SSH、Nix 设置）
+│   └── desktop.nix            # 桌面环境模块（GDM、GNOME、Niri、蓝牙、字体、Portal）
+├── assets/
+│   └── mihomo/                # 【新】mihomo 内核 + geo 路由数据库 (大陆代理)
 ├── home/
 │   └── home.nix               # Home Manager 用户配置
 └── config/                    # 用户配置文件（dotfiles，即时编辑生效）
     ├── fish/                  # Fish Shell 配置
-    ├── niri/                  # Niri 窗口管理器（含 binds/colors/rules）
+    ├── niri/                  # Niri 窗口管理器（含 binds/colors/rules/hyprlock）
     ├── waybar/                # Waybar 任务栏（含自定义脚本）
     ├── kitty/                 # Kitty 终端
     ├── fuzzel/                # Fuzzel 应用启动器
     ├── btop/                  # 系统资源监控
     ├── fastfetch/             # 系统信息展示
+    ├── matugen/               # 【新】Matugen 配色模板 (templates/*.tera)
+    ├── scripts/               # 【新】全局脚本 (matugen-update.sh 等)
     ├── starship.toml          # Starship 提示符主题
     ├── waypaper/              # 壁纸管理器
     └── yazi/                  # 终端文件管理器
 ```
 
-## 🚀 在新机器上还原环境（完整教程）
+## 🚀 在新机器上还原环境
 
-以下步骤从 NixOS 安装 ISO 启动开始，最终得到与本仓库完全一致的桌面环境。
+### 方式一：全自动脚本 (推荐)
+
+把仓库弄到 NixOS Live ISO 上 (USB 或 `git clone`)，然后：
+
+```bash
+cd /path/to/dotfiles
+sudo bash bootstrap.sh
+```
+
+脚本流程：
+1. 交互询问磁盘、主机名、用户名、仓库地址
+2. **自动检测 `assets/mihomo/` 内核** → 下载订阅配置 → 启动代理 (大陆用户)
+3. 选择 Nix 镜像 (TUNA/SJTU/USTC)
+4. 选择安装模式：**全新安装** (全盘擦除) 或 **双系统** (只在空闲空间创建 NixOS ESP + root)
+5. 自动分区、挂载、`nixos-generate-config`
+6. `git clone` 仓库到 `/mnt/home/<user>/.dotfiles` (走代理)
+7. 生成 `hosts/<主机名>/configuration.nix`
+8. `nixos-install --flake .#<主机名>`
+
+**双系统模式**: 保留 Windows 分区不动，在空闲空间新建独立 ESP (装 rEFInd) + NixOS 根分区。先在 Windows 磁盘管理中压缩卷腾空间。
+
+**大陆网络**: 仓库中预置了 mihomo 内核 (`assets/mihomo/`) 和两份订阅链接。脚本自动解压、下载配置、启动代理，后续 git/nix 全部走 `http://127.0.0.1:7890`。
+
+### 方式二：手动安装 + 注册新主机
+
+以下步骤适用于已经有 NixOS 基础系统、需要新增设备的情况。
 
 ---
 
@@ -153,16 +190,24 @@ cd ~/.dotfiles
 
 ---
 
-### 第三步：创建设备硬件配置文件夹
+### 第三步：注册新主机
 
 ```bash
-# 把刚才生成的 hardware-configuration.nix 复制进来，再复制基础配置文件
-mkdir ~/.dotfiles/hosts/当前设备名称/
+# 1. 从模板创建主机目录
+cp -r ~/.dotfiles/hosts/_template ~/.dotfiles/hosts/当前设备名称/
+
+# 2. 把装机时生成的 hardware-configuration.nix 复制进去
 sudo cp /etc/nixos/hardware-configuration.nix ~/.dotfiles/hosts/当前设备名称/hardware-configuration.nix
-cp ~/.dotfiles/hosts/vm/configuration.nix ~/.dotfiles/hosts/当前设备名称/configuration.nix
+
+# 3. 编辑 hosts/当前设备名称/configuration.nix，改三处：
+#    - networking.hostName = "当前设备名称";   # 必须 = 目录名
+#    - my.username = "alan";                   # 你的用户名
+#    - 引导方式 (UEFI 默认 systemd-boot，BIOS 改为 grub)
 ```
 
 > **说明**：`hardware-configuration.nix` 包含磁盘 UUID、文件系统布局、内核模块等机器特有信息。这是整个配置中**唯一**需要按机器替换的文件。
+>
+> `flake.nix` 会自动发现 `hosts/` 下的新目录——**无需手动编辑 flake.nix**。
 
 ---
 
@@ -252,8 +297,8 @@ sudo nixos-rebuild switch --flake .#vm
 # 更新 flake 依赖（拉取最新的 nixpkgs 和 home-manager）
 cd ~/.dotfiles && nix flake update
 
-# 重建系统
-sudo nixos-rebuild switch --flake .#vm
+# 重建系统 (主机名 = hosts/ 目录名)
+sudo nixos-rebuild switch --flake .#$(hostname)
 
 # 清理旧代际，释放磁盘空间
 sudo nix-collect-garbage -d
@@ -289,9 +334,10 @@ sudo nix-collect-garbage -d
 
 | 模块 | 职责 |
 |------|------|
-| `modules/core.nix` | 时区 (Asia/Shanghai)、中文 locale、用户 `alan`、Nix 设置、SSH |
-| `modules/desktop.nix` | GDM (Wayland)、GNOME、Niri、PipeWire 音频、Firefox |
-| `home/home.nix` | 用户级包、Fish/Zoxide/Yazi/Git 配置、dotfiles 软链接 |
+| `modules/core.nix` | 时区 (Asia/Shanghai)、中文 locale、用户 (可配)、Nix 设置、SSH |
+| `modules/desktop.nix` | GDM (Wayland)、GNOME、Niri、PipeWire、蓝牙、GPU、Portal、字体、Fcitx5 |
+| `modules/options.nix` | 全局参数 `my.username` / `my.fullName` — 改用户名只需改 host 的 configuration.nix |
+| `home/home.nix` | 用户级包、Fish/Zoxide/Yazi/Git 配置、dotfiles 软链接、polkit agent、matugen |
 
 ### 快捷键速查
 
@@ -324,20 +370,18 @@ Niri 的快捷键定义在 `config/niri/binds.kdl`：
 在新机器上部署时，你需要检查/修改：
 
 - [ ] `hardware-configuration.nix` — 替换为新机器生成的版本
-- [ ] `boot.loader.grub.device` — 改为正确的磁盘设备
-- [ ] `networking.hostName` — 改为主机名
-- [ ] `home.username` / `home.homeDirectory` — 如果用户名不是 `alan`
-- [ ] `users.users."alan"` in `core.nix` — 同上
-- [ ] `openssh.authorizedKeys.keys` — 填入你的 SSH 公钥
+- [ ] `boot.loader.*` — UEFI(systemd-boot) 或 BIOS(grub) 择一（模板默认 UEFI）
+- [ ] `networking.hostName` — **必须等于 `hosts/` 目录名**（waybar rebuild 命令靠这个定位 flake）
+- [ ] `my.username` — 改用户名只需改这一处（`core.nix` 和 `home.nix` 自动跟随）
+- [ ] `my.fullName` — 用户全名
+- [ ] `openssh.authorizedKeys.keys` in `core.nix` — 填入你的 SSH 公钥（配好后建议设 `PasswordAuthentication = false`）
 - [ ] `wlsunset` 经纬度 — 在 `binds.kdl` 中改为你的位置（Mod+F9）
 
-### 用户名修改指南
+### 用户名修改指南 (现在只需改一处)
 
-如果你的用户名不是 `alan`，需要改以下位置（3 处）：
+1. `hosts/<你的主机>/configuration.nix` → `my.username = "你的用户名";`
 
-1. `modules/core.nix` → `users.users."你的用户名"`
-2. `home/home.nix` → `home.username` 和 `home.homeDirectory`
-3. `config/fastfetch/config.jsonc` → 注释中的图片路径（可选）
+`core.nix` 和 `home.nix` 通过 `config.my.username` 自动读取，无需手动修改。
 
 ### 切换桌面环境
 
@@ -353,6 +397,25 @@ Niri 的快捷键定义在 `config/niri/binds.kdl`：
 - `niriusd` — Niri 服务
 - `shorinclip` — 剪贴板 TUI
 - `bluetui` — 蓝牙 TUI（已用 `blueman-manager` 替代）
+- `wl-longshot` — 长截图（已删除依赖 Python venv 的旧实现）
+- `swww` — 动画壁纸守护进程 (上游 v0.12 改名 `awww`，nixpkgs 尚未跟进 [#459434](https://github.com/nixos/nixpkgs/issues/459434)，暂用 `swaybg`)
+
+### 更新 mihomo 内核
+
+```bash
+# 从 GitHub Releases 下载最新 linux-amd64 .gz
+# 放到 assets/mihomo/，替换旧文件
+# geo 数据库同理: https://github.com/MetaCubeX/meta-rules-dat/releases
+```
+
+### Matugen 配色系统
+
+壁纸切换时自动运行 `matugen-update.sh` 生成 Material You 配色到：
+- `~/.config/waybar/colors.css`
+- `~/.config/niri/colors.kdl`
+- `~/.config/niri/hypr-colors.conf`
+
+模板和配置在 `config/matugen/`。手动更新配色：`Mod+Alt+M` 或 `Mod+Alt+T`。
 
 ---
 

@@ -94,7 +94,9 @@ notify_and_play() {
     local title="$1" msg="$2"
     notify-send "$title" "$msg" -a "Window Killer" -i application-exit
     if command -v pw-play &> /dev/null; then
-        pw-play /usr/share/sounds/freedesktop/stereo/dialog-error.oga >/dev/null 2>&1 &
+        local snd
+        snd=$(for p in /run/current-system/sw/share/sounds/freedesktop/stereo/dialog-error.oga /nix/store/*/share/sounds/freedesktop/stereo/dialog-error.oga /usr/share/sounds/freedesktop/stereo/dialog-error.oga; do [[ -f "$p" ]] && { echo "$p"; break; }; done)
+        [ -n "$snd" ] && pw-play "$snd" >/dev/null 2>&1 &
     fi
 }
 

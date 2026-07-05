@@ -17,12 +17,12 @@ binds {
     Mod+Shift+Slash hotkey-overlay-title="快捷键教程 Keybind tutorial" { show-hotkey-overlay; }
 
     // alt+tab切换窗口
-    Alt+Tab hotkey-overlay-title="快速跳转窗口 Quick window switch menu" {spawn "~/.config/scripts/niri-quick-switch-fuzzel.py";}
+    Alt+Tab hotkey-overlay-title="快速跳转窗口 Quick window switch menu" {spawn "~/.config/niri/scripts/niri-quick-switch-fuzzel.py";}
     Mod+Alt+W hotkey-overlay-title="切换壁纸 Change wallpaper" {spawn "waypaper";}
-    Mod+Alt+M hotkey-overlay-title="切换颜色策略 Change color strategy" {spawn "~/.config/scripts/matugen-select-type.sh";}
-    Mod+Alt+T hotkey-overlay-title="切换颜色策略 Change color strategy" {spawn "~/.config/scripts/matugen-select-type.sh";}
+    Mod+Alt+M hotkey-overlay-title="更新配色 Regenerate colors" {spawn "~/.config/scripts/matugen-update.sh";}
+    Mod+Alt+T hotkey-overlay-title="更新配色 Regenerate colors" {spawn "~/.config/scripts/matugen-update.sh";}
     Mod+F10 hotkey-overlay-title="随机切换壁纸 Random wallpaper" {spawn "waypaper" "--random";}
-    Mod+Shift+F10 hotkey-overlay-title="随机下载动漫壁纸 Random download anime wallpaper" {spawn "~/.config/scripts/random-anime-wallpaper.sh";}
+    // Mod+Shift+F10 hotkey-overlay-title="随机下载动漫壁纸 Random download anime wallpaper" {spawn "~/.config/scripts/random-anime-wallpaper.sh";}  // 脚本未实现
     Mod+F1 hotkey-overlay-title="开关输入法 Toggle fcitx" {spawn-sh "pkill fcitx5 || fcitx5 ";}
     Mod+F2 hotkey-overlay-title=null  {spawn-sh "pkill cava || true && pkill waybar || true && waybar -c $HOME/.config/waybar/config.jsonc -s $HOME/.config/waybar/style.css ";}
     Mod+F3  hotkey-overlay-title=null {spawn-sh "pkill cava || true && pkill waybar || true &&  waybar -c $HOME/.config/waybar-niri-Win11Like/config.jsonc -s $HOME/.config/waybar-niri-Win11Like/style.css ";}
@@ -65,12 +65,11 @@ binds {
     Mod+Return hotkey-overlay-title="终端 Terminal" { spawn "kitty" "--single-instance"; }
 
     Mod+P hotkey-overlay-title="Vscode" { spawn "code" "--single-instance"; }
-    Mod+D hotkey-overlay-title="Obsidian" { spawn "obsidian" "--single-instance"; }
+    // Mod+D hotkey-overlay-title="Obsidian" { spawn "obsidian" "--single-instance"; }  // obsidian 未安装，需时在 home.nix 取消注释
 
-    // 文档管理器。如果有thunar的话会优先打开thunar，没有的话会打开nautilus，不要问我为什么（）
-    Mod+E hotkey-overlay-title="文档管理器 Filemanager" { spawn-sh "thunar || env GSK_RENDERER=gl GTK_IM_MODULE=fcitx  nautilus"; }
-    // 另一个打开nautilus的快捷键，主要是为了在同时安装thunar和nautilus的情况下打开naultilus
-    Mod+Alt+E hotkey-overlay-title=null {spawn "env" "GSK_RENDERER=gl" "GTK_IM_MODULE=fcitx"  "nautilus" "--new-window";}
+    // 文档管理器 (GNOME 的 nautilus)
+    Mod+E hotkey-overlay-title="文档管理器 Filemanager" { spawn "nautilus"; }
+    Mod+Alt+E hotkey-overlay-title=null { spawn "nautilus" "--new-window"; }
     Alt+Space hotkey-overlay-title="程序菜单 Applauncher" { spawn "fuzzel"; }
     // 锁屏
     Mod+Alt+L hotkey-overlay-title="锁屏 Lock screen" { spawn-sh "hyprlock -c ~/.config/niri/hyprlock.conf"; } 

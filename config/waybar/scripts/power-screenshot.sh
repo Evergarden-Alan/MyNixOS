@@ -21,7 +21,7 @@ SCREEN_DIR="$PICTURES_DIR/Screenshots"
 # [新增] 音效配置
 # ===========================
 # 音效文件路径 (默认 freedesktop 快门声)
-SOUND_FILE="/usr/share/sounds/freedesktop/stereo/camera-shutter.oga"
+SOUND_FILE=$(for p in /run/current-system/sw/share/sounds/freedesktop/stereo/camera-shutter.oga /nix/store/*/share/sounds/freedesktop/stereo/camera-shutter.oga /usr/share/sounds/freedesktop/stereo/camera-shutter.oga; do [[ -f "$p" ]] && { echo "$p"; break; }; done)
 # 播放命令 (后台运行，静默)
 # 如果你没有 pw-play，可以换成 paplay 或 aplay
 PLAY_SOUND_CMD() {
