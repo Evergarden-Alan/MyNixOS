@@ -9,7 +9,7 @@
 | **发行版** | NixOS (unstable) |
 | **显示管理器** | GDM (Wayland) |
 | **桌面环境** | GNOME + Niri (平铺窗口管理器) |
-| **引导器** | systemd-boot (全新) / rEFInd (双系统) |
+| **引导器** | systemd-boot (全新/UEFI) / rEFInd (双系统) / grub (BIOS/VM) |
 | **Shell** | Fish + Starship |
 | **终端** | Kitty / Alacritty |
 | **任务栏** | Waybar |
@@ -26,32 +26,37 @@
 .
 ├── flake.nix                  # Flake 入口：自动发现 hosts/ 下所有主机
 ├── flake.lock                 # 依赖版本锁定文件
-├── bootstrap.sh               # 【新】全自动安装脚本 (Live ISO 中运行)
+├── bootstrap.sh               # 全自动安装脚本 (Live ISO 中运行)
+├── .gitattributes             # 强制 *.sh/*.env 用 LF (防 Windows CRLF 坑)
 ├── hosts/
 │   ├── _template/             # 新主机模板 (cp -r 后改名，改一行即可)
 │   │   ├── configuration.nix
 │   │   └── hardware-configuration.nix.placeholder
 │   └── vm/
-│       ├── configuration.nix  # 系统级配置（引导、网络、主机名）
+│       ├── configuration.nix  # 系统级配置（引导、网络、主机名；vm 用 BIOS grub）
 │       └── hardware-configuration.nix  # 自动生成的硬件配置（机器相关）
 ├── modules/
-│   ├── options.nix            # 【新】全局参数 (my.username / my.fullName)
-│   ├── core.nix               # 核心系统模块（时区、用户、SSH、Nix 设置）
+│   ├── options.nix            # 全局参数 (my.username / my.fullName / my.hostName)
+│   ├── core.nix               # 核心系统模块（时区、locale、用户、SSH、Nix 设置 + 自动 GC）
 │   └── desktop.nix            # 桌面环境模块（GDM、GNOME、Niri、蓝牙、字体、Portal）
 ├── assets/
-│   └── mihomo/                # 【新】mihomo 内核 + geo 路由数据库 (大陆代理)
+│   ├── mihomo/                # mihomo 内核 + geo 路由数据库 (大陆代理)
+│   └── refind/                # rEFInd 引导主题 (双系统用，rEFInd-minimal)
+├── images/
+│   └── wallpaper.png          # 默认壁纸
 ├── home/
 │   └── home.nix               # Home Manager 用户配置
 └── config/                    # 用户配置文件（dotfiles，即时编辑生效）
     ├── fish/                  # Fish Shell 配置
-    ├── niri/                  # Niri 窗口管理器（含 binds/colors/rules/hyprlock）
-    ├── waybar/                # Waybar 任务栏（含自定义脚本）
+    ├── niri/                  # Niri 窗口管理器（binds/colors/rules/hyprlock + scripts/）
+    ├── waybar/                # Waybar 任务栏（自定义脚本 + logo + modules）
     ├── kitty/                 # Kitty 终端
     ├── fuzzel/                # Fuzzel 应用启动器
     ├── btop/                  # 系统资源监控
     ├── fastfetch/             # 系统信息展示
-    ├── matugen/               # 【新】Matugen 配色模板 (templates/*.tera)
-    ├── scripts/               # 【新】全局脚本 (matugen-update.sh 等)
+    ├── matugen/               # Matugen 配色模板 (templates/*.tera)
+    ├── mihomo/                # mihomo 运行时配置目录
+    ├── scripts/               # 全局脚本 (start-proxy / matugen-update / install-refind-theme)
     ├── starship.toml          # Starship 提示符主题
     ├── waypaper/              # 壁纸管理器
     └── yazi/                  # 终端文件管理器
@@ -68,17 +73,24 @@ cd /path/to/dotfiles
 sudo bash bootstrap.sh
 ```
 
+> **⚠️ Windows 用户注意 (CRLF)**: 仓库在 Windows 上 checkout 时 `core.autocrlf` 会把 `*.sh` 转成 CRLF，原样拷到 Linux 会第一行就报错（`bad interpreter` / `\r: command not found`）。已用 `.gitattributes` 强制 `*.sh`/`*.env` 用 LF 根治。若你已拷了 CRLF 版本到 Live 盘，跑前先转：
+> ```bash
+> sed -i 's/\r$//' bootstrap.sh config/scripts/*.sh
+> ```
+> 或直接在 Live 盘 `git clone`（Linux clone 出来就是 LF，无此问题）。
+
 脚本流程：
-1. 交互询问磁盘、主机名、用户名、仓库地址
+1. 交互询问磁盘、主机名、用户名、仓库地址、文件系统、时区
 2. **自动检测 `assets/mihomo/` 内核** → 下载订阅配置 → 启动代理 (大陆用户)
 3. 选择 Nix 镜像 (TUNA/SJTU/USTC)
-4. 选择安装模式：**全新安装** (全盘擦除) 或 **双系统** (只在空闲空间创建 NixOS ESP + root)
-5. 自动分区、挂载、`nixos-generate-config`
+4. 选择安装模式：**全新安装** (全盘擦除, systemd-boot) 或 **双系统** (空闲空间建 NixOS ESP + root, rEFInd)
+5. 自动分区、格式化、挂载、`nixos-generate-config`
 6. `git clone` 仓库到 `/mnt/home/<user>/.dotfiles` (走代理)
-7. 生成 `hosts/<主机名>/configuration.nix`
+7. 生成 `hosts/<主机名>/configuration.nix` (含引导器/镜像/身份配置)
 8. `nixos-install --flake .#<主机名>`
+9. 设置 `<user>` 密码 (最多重试 3 次)
 
-**双系统模式**: 保留 Windows 分区不动，在空闲空间新建独立 ESP (装 rEFInd) + NixOS 根分区。先在 Windows 磁盘管理中压缩卷腾空间。
+**双系统模式**: 保留 Windows 分区不动，在空闲空间新建独立 ESP (装 rEFInd) + NixOS 根分区。先在 Windows 磁盘管理中压缩卷腾空间。脚本会写入 rEFInd 配置（含 minimal 主题 include），但主题文件需进新系统后跑 `install-refind-theme.sh` 装到 ESP（见下文 [rEFInd 主题](#refind-引导主题-双系统)）。
 
 **大陆网络**: 仓库中预置了 mihomo 内核 (`assets/mihomo/`) 和两份订阅链接。脚本自动解压、下载配置、启动代理，后续 git/nix 全部走 `http://127.0.0.1:7890`。
 
@@ -184,7 +196,7 @@ nixos-install
 nix-shell -p git
 
 # 克隆仓库（⚠️ 必须克隆到 ~/.dotfiles）
-git clone https://github.com/<your-username>/<repo-name>.git ~/.dotfiles
+git clone https://github.com/Evergarden-Alan/MyNixOS.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
@@ -370,7 +382,7 @@ Niri 的快捷键定义在 `config/niri/binds.kdl`：
 在新机器上部署时，你需要检查/修改：
 
 - [ ] `hardware-configuration.nix` — 替换为新机器生成的版本
-- [ ] `boot.loader.*` — UEFI(systemd-boot) 或 BIOS(grub) 择一（模板默认 UEFI）
+- [ ] `boot.loader.*` — 单系统 UEFI 用 systemd-boot；BIOS 用 grub；双系统 Win11+NixOS 用 rEFInd（`_template` 默认 rEFInd）
 - [ ] `networking.hostName` — **必须等于 `hosts/` 目录名**（waybar rebuild 命令靠这个定位 flake）
 - [ ] `my.username` — 改用户名只需改这一处（`core.nix` 和 `home.nix` 自动跟随）
 - [ ] `my.fullName` — 用户全名
@@ -407,6 +419,21 @@ Niri 的快捷键定义在 `config/niri/binds.kdl`：
 # 放到 assets/mihomo/，替换旧文件
 # geo 数据库同理: https://github.com/MetaCubeX/meta-rules-dat/releases
 ```
+
+### rEFInd 引导主题 (双系统)
+
+双系统模式用 rEFInd 作引导器，自动扫描 ESP 上 Win11 + NixOS 引导项并按 `os_*.png` 匹配图标。`assets/refind/rEFInd-minimal/` 是预置主题（自带 `os_nixos.png` + `os_win.png`）。
+
+进新系统后把主题装到 ESP：
+
+```bash
+sudo bash config/scripts/install-refind-theme.sh          # 默认 minimal
+# 可选主题: minimal (推荐, 自带 NixOS 图标) | dawn | sublime
+```
+
+脚本把主题拷到 `ESP/EFI/refind/themes/` 并在 `refind.conf` 追加 `include`，同时检查 UEFI 启动顺序（确保 rEFInd 排第一，否则开机直进 Win11）。
+
+> ⚠️ `nixos-rebuild` 会重新生成 `refind.conf` 抹掉 include 行。持久化需把 `boot.loader.refind.extraConfig` 写进 `hosts/<主机名>/configuration.nix`（`_template` 已含，bootstrap.sh 双系统模式也会自动写入）。
 
 ### Matugen 配色系统
 
