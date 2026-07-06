@@ -20,11 +20,11 @@ MIHOMO_BIN="$MIHOMO_DIR/mihomo"
 CONFIG_FILE="$MIHOMO_DIR/config.yaml"
 PID_FILE="$MIHOMO_DIR/mihomo.pid"
 
-# 订阅地址
-SUB_URL_1="https://103.14.76.98/sub/fsc/90313af30d19d6aa5c237b8d8a9941e3"
-SUB_URL_2="http://skylumo.com/api/v1/client/subscribe?token=683bdf3ff34bb8f67f62544d70bfbc6c"
-
 DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
+
+# 订阅地址 —— 从本地 env 文件读 (token 不进 git)，参考 sub.env.example
+# env 路径可用 MIHOMO_SUB_ENV 覆盖，默认 $DOTFILES/assets/mihomo/sub.env
+SUB_ENV="${MIHOMO_SUB_ENV:-$DOTFILES/assets/mihomo/sub.env}"
 [ -z "${QUIET:-}" ] && QUIET="false" || true
 
 log()   { [ "$QUIET" = "true" ] || echo -e "\033[1;36m[*]\033[0m $*"; }
@@ -99,19 +99,31 @@ download_subs() {
     local sub1="/tmp/mihomo-sub-1.yaml" sub2="/tmp/mihomo-sub-2.yaml"
     local chosen=""
 
-    log "下载订阅 主 ..."
-    if download "$SUB_URL_1" "$sub1"; then
-        if grep -q 'proxies:' "$sub1" 2>/dev/null; then
-            chosen="$sub1"
-            ok "主订阅可用 ($(wc -l < "$sub1") 行)"
-        else
-            warn "主订阅格式无效 (无 proxies: 段)"
-        fi
+    # 从本地 env 文件读订阅地址 (token 不进 git)，参考 sub.env.example
+    if [ -f "$SUB_ENV" ]; then
+        set -a; . "$SUB_ENV"; set +a
     else
-        warn "主订阅下载失败"
+        warn "未找到订阅配置: $SUB_ENV"
+        warn "请复制 assets/mihomo/sub.env.example 为 sub.env 并填入订阅地址"
+        return 1
+    fi
+    [ -n "${SUB_URL_1:-}${SUB_URL_2:-}" ] || { warn "sub.env 未定义 SUB_URL_1 / SUB_URL_2"; return 1; }
+
+    if [ -n "${SUB_URL_1:-}" ]; then
+        log "下载订阅 主 ..."
+        if download "$SUB_URL_1" "$sub1"; then
+            if grep -q 'proxies:' "$sub1" 2>/dev/null; then
+                chosen="$sub1"
+                ok "主订阅可用 ($(wc -l < "$sub1") 行)"
+            else
+                warn "主订阅格式无效 (无 proxies: 段)"
+            fi
+        else
+            warn "主订阅下载失败"
+        fi
     fi
 
-    if [ -z "$chosen" ]; then
+    if [ -z "$chosen" ] && [ -n "${SUB_URL_2:-}" ]; then
         log "尝试订阅 备 ..."
         if download "$SUB_URL_2" "$sub2"; then
             if grep -q 'proxies:' "$sub2" 2>/dev/null; then

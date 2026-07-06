@@ -12,9 +12,20 @@
 {
   imports = [ ./hardware-configuration.nix ];
 
-  # ---- 引导 (默认 UEFI systemd-boot，与 README 一致) ----
-  boot.loader.systemd-boot.enable = true;
+  # ---- 引导 (双系统 Win11+NixOS: rEFInd + minimal 主题) ----
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.refind = {
+    enable = true;
+    extraConfig = ''
+      # 引导主题 (先跑 config/scripts/install-refind-theme.sh 把主题装到 ESP)
+      include themes/rEFInd-minimal/theme.conf
+      # 噪音剔除: 隐藏 Windows 恢复 / 诊断工具 / OEM 残留
+      dont_scan_dirs EFI/Recovery,EFI/Tools,EFI/Dell,EFI/HP
+      dont_scan_files fbx64.efi,mmx64.efi
+    '';
+  };
+  # 备选: 单系统纯 UEFI 用 systemd-boot
+  # boot.loader.systemd-boot.enable = true;
   # BIOS 机器改用 grub:
   # boot.loader.grub.enable = true;
   # boot.loader.grub.device = "/dev/sda";

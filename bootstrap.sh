@@ -55,8 +55,9 @@ FULLNAME="${FULLNAME:-Alan}"
 read -rp "时区 [Asia/Shanghai]: " TIMEZONE
 TIMEZONE="${TIMEZONE:-Asia/Shanghai}"
 
-read -rp "仓库地址 (git URL) []: " REPO_URL
-[ -n "$REPO_URL" ] || die "必须提供仓库地址,否则无法用 flake 安装"
+read -rp "仓库地址 (git URL) [https://github.com/Evergarden-Alan/MyNixOS.git]: " REPO_URL
+REPO_URL="${REPO_URL:-https://github.com/Evergarden-Alan/MyNixOS.git}"
+read -rp "锁定到 git ref (tag/commit/branch, 留空用默认分支) []: " REPO_REF
 
 # ---------------------------- 网络配置 (中国大陆) ----------------------------
 echo
@@ -67,6 +68,22 @@ echo -e "  中国大陆访问 GitHub / cache.nixos.org 极慢或不通。"
 MIHOMO_GZ=$(ls "$SCRIPT_DIR/assets/mihomo/mihomo-linux-amd64-v"*".gz" 2>/dev/null | head -1 || true)
 if [ -n "$MIHOMO_GZ" ] && [ -f "$MIHOMO_GZ" ]; then
     log "检测到 mihomo 内核: $(basename "$MIHOMO_GZ")"
+
+    # 订阅地址写本地 sub.env (token 不进 git)，缺则交互生成
+    SUB_ENV="$SCRIPT_DIR/assets/mihomo/sub.env"
+    if [ ! -f "$SUB_ENV" ]; then
+        echo -e "  ${C_Y}未找到订阅配置 sub.env${C_N} (token 仅存本地, 不写入 git)"
+        read -rp "  主订阅 URL []: " SUB_URL_1
+        read -rp "  备订阅 URL (留空跳过) []: " SUB_URL_2
+        {
+            echo "# mihomo 订阅地址 (本地, 勿提交 git) —— 由 bootstrap.sh 生成"
+            echo "SUB_URL_1=${SUB_URL_1}"
+            [ -n "${SUB_URL_2:-}" ] && echo "SUB_URL_2=${SUB_URL_2}"
+        } > "$SUB_ENV"
+        chmod 600 "$SUB_ENV"
+        ok "已写入 $SUB_ENV (chmod 600)"
+    fi
+
     log "解压内核 + 下载订阅 + 启动代理 ..."
     MIHOMO_GZ="$MIHOMO_GZ" \
     DOTFILES="$SCRIPT_DIR" \
@@ -80,6 +97,9 @@ if [ -n "$MIHOMO_GZ" ] && [ -f "$MIHOMO_GZ" ]; then
         export ALL_PROXY="socks5://127.0.0.1:7890"
         echo "Defaults env_keep += \"http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY\"" > /etc/sudoers.d/proxy
         chmod 440 /etc/sudoers.d/proxy
+        if command -v visudo >/dev/null 2>&1; then
+            visudo -cf /etc/sudoers.d/proxy 2>/dev/null || warn "proxy sudoers 语法检查失败"
+        fi
         git config --global http.proxy "http://127.0.0.1:7890"
         git config --global https.proxy "http://127.0.0.1:7890"
         PROXY="http://127.0.0.1:7890 (mihomo 自动)"
@@ -104,6 +124,9 @@ if [ "${MIHOMO_OK:-false}" = false ] && [ -z "${PROXY:-}" ]; then
         export ALL_PROXY="$PROXY"
         echo "Defaults env_keep += \"http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY\"" > /etc/sudoers.d/proxy
         chmod 440 /etc/sudoers.d/proxy
+        if command -v visudo >/dev/null 2>&1; then
+            visudo -cf /etc/sudoers.d/proxy 2>/dev/null || warn "proxy sudoers 语法检查失败"
+        fi
         git config --global http.proxy "$PROXY"
         git config --global https.proxy "$PROXY"
         ok "代理已设置: $PROXY (git + env + sudo)"
@@ -164,14 +187,19 @@ if $DUALBOOT; then
     parted "$DISK" unit MiB print free 2>/dev/null || true
     echo
     # 检测最大空闲空间 (按大小排序)
-    FREE_LINE=$(parted "$DISK" unit MiB print free 2>/dev/null | awk '/Free Space/{gsub(/MiB/,"",$1); gsub(/MiB/,"",$2); sz=$2-$1; if(sz>max){max=sz; line=$0}}END{print line}')
+    FREE_LINE=$(LC_ALL=C parted "$DISK" unit MiB print free 2>/dev/null | awk '/Free Space/{gsub(/MiB/,"",$1); gsub(/MiB/,"",$2); sz=$2-$1; if(sz>max){max=sz; line=$0}}END{print line}')
     if [ -z "$FREE_LINE" ]; then
         die "未检测到空闲空间。请先在 Windows 磁盘管理中压缩卷腾出空间。"
     fi
     FREE_START=$(echo "$FREE_LINE" | awk '{gsub(/MiB/,"",$1); print int($1)}')
     FREE_END=$(echo "$FREE_LINE"   | awk '{gsub(/MiB/,"",$2); print int($2)}')
     FREE_SIZE=$((FREE_END - FREE_START))
-    log "空闲空间: ${FREE_START}MiB - ${FREE_END}MiB (共 ${FREE_SIZE}MiB)"
+    # 边界校验 —— 防止解析异常导致 mkpart 坐标落到已有分区上
+    DISK_SIZE_MIB=$(LC_ALL=C parted "$DISK" unit MiB print 2>/dev/null | awk '/^Disk .*:/{gsub(/MiB/,"",$3); print int($3); exit}')
+    [ "$FREE_START" -gt 0 ] 2>/dev/null || die "空闲空间起始解析失败 (FREE_START=$FREE_START)"
+    [ "$FREE_END" -gt "$FREE_START" ] 2>/dev/null || die "空闲空间边界异常 (start=$FREE_START end=$FREE_END)"
+    [ -n "$DISK_SIZE_MIB" ] && [ "$FREE_END" -le "$DISK_SIZE_MIB" ] 2>/dev/null || die "空闲空间结束 ($FREE_END) 超出盘大小 (${DISK_SIZE_MIB:-未知})"
+    log "空闲空间: ${FREE_START}MiB - ${FREE_END}MiB (共 ${FREE_SIZE}MiB, 盘大小 ${DISK_SIZE_MIB:-?}MiB)"
 
     if [ "$FREE_SIZE" -lt 20480 ]; then
         warn "空闲空间仅 ${FREE_SIZE}MiB (<20GB), NixOS 根分区偏小"
@@ -184,42 +212,96 @@ if $DUALBOOT; then
 
     BOOTLOADER="refind"
     BOOTLOADER_LINE="boot.loader.refind.enable = true;"
+    REFIND_EXTRA=$(cat <<'REFINDEOF'
+  boot.loader.refind.extraConfig = ''
+    include themes/rEFInd-minimal/theme.conf
+    dont_scan_dirs EFI/Recovery,EFI/Tools,EFI/Dell,EFI/HP
+    dont_scan_files fbx64.efi,mmx64.efi
+  '';
+REFINDEOF
+)
 else
     BOOTLOADER="systemd-boot"
     BOOTLOADER_LINE="boot.loader.systemd-boot.enable = true;"
+    REFIND_EXTRA=""
 fi
 
 echo
 echo -e "${C_Y}==== 确认 ====${C_N}"
+echo "  目标盘当前布局:"
+lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS "$DISK" 2>/dev/null || true
 echo "  磁盘     : $DISK $($DUALBOOT && echo '(仅动空闲空间)' || echo '(将被完全擦除!)')"
 echo "  安装模式 : $($DUALBOOT && echo '双系统 (rEFInd)' || echo '全新安装 (systemd-boot)')"
 echo "  主机名   : $HOSTNAME"
 echo "  用户名   : $USERNAME"
 echo "  时区     : $TIMEZONE"
 echo "  文件系统 : $FSTYPE"
-echo "  仓库     : $REPO_URL"
+echo "  仓库     : $REPO_URL${REPO_REF:+ @ $REPO_REF}"
 echo "  代理     : ${PROXY:-无}"
 echo "  Nix镜像  : ${NIX_MIRROR:-默认 cache.nixos.org}"
-read -rp "确认开始安装? 输入 YES 继续: " CONFIRM
-[ "$CONFIRM" = "YES" ] || die "已取消"
+if $DUALBOOT; then
+    read -rp "确认开始安装? 输入 YES 继续: " CONFIRM
+    [ "$CONFIRM" = "YES" ] || die "已取消"
+else
+    DISK_BASE="$(basename "$DISK")"
+    echo -e "  ${C_R}全新安装将完全擦除 $DISK 上所有数据！${C_N}"
+    read -rp "确认? 输入 $DISK_BASE 继续: " CONFIRM
+    [ "$CONFIRM" = "$DISK_BASE" ] || die "已取消 (输入与盘名不符)"
+fi
 
 # ---------------------------- 1. 分区 ----------------------------
 PART_SUFFIX=""
 [[ "$(basename "$DISK")" == *nvme* || "$(basename "$DISK")" == *mmcblk* ]] && PART_SUFFIX="p"
 
+# 校验 $DISK 是存在的整盘 (防止误操作分区或不存在设备)
+[ -b "$DISK" ] || die "设备不存在: $DISK"
+DISK_TYPE="$(lsblk -ndo TYPE "$DISK" 2>/dev/null)"
+[ "$DISK_TYPE" = "disk" ] || die "$DISK 不是整盘 (TYPE=${DISK_TYPE:-未知})，请用 /dev/sdX 或 /dev/nvmeXnY"
+
+# 幂等: 清掉上次失败残留的 /mnt 挂载
+umount -R /mnt 2>/dev/null || true
+
+# 清掉目标盘上的挂载与 swap —— 否则 partprobe 可能静默失败 / 写 GPT 弄坏已挂载 FS
+log "卸载 $DISK 上的挂载与 swap ..."
+lsblk -nlo NAME "$DISK" | grep -E "^$(basename "$DISK")${PART_SUFFIX}[0-9]+$" | while read -r p; do
+    umount -R "/dev/$p" 2>/dev/null || true
+done
+lsblk -nlo NAME,TYPE "$DISK" | awk '$2=="part"{print "/dev/"$1}' | while read -r d; do
+    swapoff "$d" 2>/dev/null || true
+done
+
+# 轮询识别刚建的新分区 (partprobe 异步, sleep 1 不可靠) —— 返回唯一新增分区名
+wait_new_part() {
+    local before="$1" after new n
+    for _ in $(seq 1 10); do
+        partprobe "$DISK" 2>/dev/null || true
+        after=$(lsblk -nlo NAME "$DISK" | grep -E "^$(basename "$DISK")${PART_SUFFIX}[0-9]+$" | sort -V || true)
+        if [ -z "$before" ]; then
+            new="$after"
+        else
+            new=$(comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$after"))
+        fi
+        n=$(printf '%s\n' "$new" | grep -cx .)
+        [ "$n" -eq 1 ] && { printf '%s\n' "$new"; return 0; }
+        sleep 1
+    done
+    die "新分区未识别 (partprobe 超时) — 已停止, 未格式化任何分区"
+}
+
 if $DUALBOOT; then
     log "在空闲空间创建 NixOS 分区 (保留已有分区) ..."
     ESP_SIZE_MB=$ESP_SIZE
-    parted "$DISK" mkpart "NIXOS_ESP" fat32 ${FREE_START}MiB $((FREE_START + ESP_SIZE_MB))MiB
-    parted "$DISK" mkpart "NIXOS_ROOT" $((FREE_START + ESP_SIZE_MB + 1))MiB ${FREE_END}MiB
 
-    # 确定新分区编号 — 让内核先识别刚建的分区
-    partprobe "$DISK" 2>/dev/null || true; sleep 1
-    ALL_PARTS=($(lsblk -nlo NAME "$DISK" | grep -E "^$(basename "$DISK")${PART_SUFFIX}[0-9]+$" | sort -V))
-    ROOT_PART="${ALL_PARTS[-1]}"
-    ESP_PART="${ALL_PARTS[-2]}"
+    # 建分区前的分区名快照
+    BEFORE=$(lsblk -nlo NAME "$DISK" | grep -E "^$(basename "$DISK")${PART_SUFFIX}[0-9]+$" | sort -V || true)
 
+    parted "$DISK" mkpart "NIXOS_ESP"  fat32 ${FREE_START}MiB $((FREE_START + ESP_SIZE_MB))MiB
+    ESP_PART=$(wait_new_part "$BEFORE")
     ESP="/dev/$ESP_PART"
+
+    BEFORE=$(lsblk -nlo NAME "$DISK" | grep -E "^$(basename "$DISK")${PART_SUFFIX}[0-9]+$" | sort -V || true)
+    parted "$DISK" mkpart "NIXOS_ROOT" $((FREE_START + ESP_SIZE_MB + 1))MiB ${FREE_END}MiB
+    ROOT_PART=$(wait_new_part "$BEFORE")
     ROOT="/dev/$ROOT_PART"
 
     # 标记 ESP 类型
@@ -274,8 +356,12 @@ ok "硬件配置已生成: $HWCONF"
 DOTFILES="/mnt/home/$USERNAME/.dotfiles"
 log "克隆仓库到 $DOTFILES ..."
 mkdir -p "/mnt/home/$USERNAME"
-if ! git clone "$REPO_URL" "$DOTFILES" 2>/dev/null; then
-    die "克隆失败,请检查仓库地址: $REPO_URL"
+if [ -n "${REPO_REF:-}" ]; then
+    git clone --branch "$REPO_REF" "$REPO_URL" "$DOTFILES" 2>/dev/null || die "克隆失败 (ref=$REPO_REF): $REPO_URL"
+else
+    if ! git clone "$REPO_URL" "$DOTFILES" 2>/dev/null; then
+        die "克隆失败,请检查仓库地址: $REPO_URL"
+    fi
 fi
 ok "仓库已克隆"
 
@@ -310,6 +396,7 @@ cat > "$HOST_DIR/configuration.nix" <<NIXHEREDOC
 
   # ---- 引导 (UEFI $BOOTLOADER) ----
   $BOOTLOADER_LINE
+$REFIND_EXTRA
   boot.loader.efi.canTouchEfiVariables = true;
   # 若为 BIOS 机器,改用 grub:
   # boot.loader.grub.enable = true;

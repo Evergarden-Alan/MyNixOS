@@ -5,6 +5,7 @@ result-*
 # Secrets and environment files
 .env
 .env.local
+assets/mihomo/sub.env
 .secrets
 *.secret
 *_secret
