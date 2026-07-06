@@ -1,0 +1,7 @@
+# 跨平台换行符: 这些文件在 Linux 上执行或被 source,
+# 必须用 LF。CRLF 会导致 shebang 解析失败 / source 时变量带 \r。
+# (Windows 上 core.autocrlf=true 会把 checkout 的文本转成 CRLF,
+#  此规则覆盖该行为, 对这些后缀强制 LF。)
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.env*  text eol=lf
