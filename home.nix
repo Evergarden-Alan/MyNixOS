@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports = [
@@ -6,7 +6,6 @@
     # ./modules/desktop/dms.nix  # DMS flake 暂不可用
     ./modules/desktop/niri.nix
     ./modules/desktop/fuzzel.nix
-    ./modules/desktop/fonts.nix
     ./modules/desktop/theme.nix
 
     # Shell 环境
@@ -35,7 +34,7 @@
   # 用户信息
   home = {
     username = "alan";
-    homeDirectory = "/home/alan";
+    homeDirectory = lib.mkForce "/home/alan";
     stateVersion = "26.05";
 
     # 用户级软件包（各模块中定义）

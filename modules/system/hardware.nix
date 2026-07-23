@@ -11,8 +11,8 @@
     enable32Bit = true;  # 32位应用支持（游戏需要）
     extraPackages = with pkgs; [
       intel-media-driver  # Intel VAAPI
-      vaapiIntel
-      vaapiVdpau
+      intel-vaapi-driver
+      libva-vdpau-driver
       libvdpau-va-gl
       intel-compute-runtime  # OpenCL
     ];

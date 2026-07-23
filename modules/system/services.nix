@@ -13,7 +13,6 @@
     enable = true;
     qemu = {
       package = pkgs.qemu_kvm;
-      ovmf.enable = true;  # UEFI 支持
       swtpm.enable = true;  # TPM 仿真
     };
   };
@@ -22,14 +21,13 @@
   # greetd 登录管理器
   services.greetd = {
     enable = true;
-    vt = 1;
     settings = {
       initial_session = {
         command = "niri-session";
         user = "alan";
       };
       default_session = {
-        command = "${pkgs.greetd.greetd}/bin/agreety --cmd ${pkgs.bash}/bin/bash";
+        command = "${pkgs.greetd}/bin/agreety --cmd ${pkgs.bash}/bin/bash";
         user = "greeter";
       };
     };

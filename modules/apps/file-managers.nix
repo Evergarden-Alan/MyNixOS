@@ -5,7 +5,7 @@
   home.packages = with pkgs; [
     # GUI 文件管理器
     nautilus
-    gnome-sushi  # 文件预览
+    sushi  # 文件预览（gnome-sushi 已改名）
     file-roller  # 压缩包管理
 
     thunar

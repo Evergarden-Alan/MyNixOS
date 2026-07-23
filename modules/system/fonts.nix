@@ -8,10 +8,10 @@
       noto-fonts
       noto-fonts-cjk-sans
       noto-fonts-cjk-serif
-      noto-fonts-emoji
+      noto-fonts-color-emoji
 
       # 编程字体
-      (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+      (nerd-fonts.jetbrains-mono)
 
       # 系统字体
       liberation_ttf

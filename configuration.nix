@@ -13,6 +13,7 @@
     ./modules/system/services.nix
     ./modules/system/security.nix
     ./modules/system/nix.nix
+    ./modules/system/fonts.nix
   ];
 
   # 系统版本（不要修改）
@@ -43,6 +44,19 @@
 
   # 允许非自由软件
   nixpkgs.config.allowUnfree = true;
+
+  # 临时根文件系统占位符（实际安装时由 hardware-configuration.nix 提供）
+  # 仅用于 flake check 验证
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "btrfs";
+    options = [ "subvol=@" "compress=zstd" "noatime" ];
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/BOOT";
+    fsType = "vfat";
+  };
 
   # 基础系统软件包
   environment.systemPackages = with pkgs; [

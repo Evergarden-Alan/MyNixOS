@@ -8,7 +8,7 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
-    initExtra = ''
+    initContent = ''
       # Starship 提示符
       eval "$(starship init zsh)"
 

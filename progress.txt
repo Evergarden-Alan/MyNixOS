@@ -41,13 +41,13 @@
   - git.nix ✓
   - languages.nix ✓
 - [Phase 9] 快速语法验证 ✓ (nix flake show)
-- [Phase 10] 创建 README.md ✓
+- [Phase 10] Git 初始化与提交 ✓
 
 [Doing]
 - [Phase 9] 等待完整验证完成 (nix flake check 后台运行中)
 
 [Next]
-- [Phase 10] Git 初始化与提交
+- [Phase 9] 完整构建测试（可选）
 - [Phase 11] 实际部署准备（未来执行）
 
 [Bugs]
