@@ -35,3 +35,34 @@ error: cannot read file from tarball: Truncated tar archive detected while readi
 **教训**：
 - 外部 flake 依赖可能不稳定，需要降级方案
 - 可以先手动安装 DMS 包，不通过 flake 集成
+
+---
+
+## [2026-07-23] 配置验证与修复完成
+
+**问题**：多个配置错误与包名变更
+
+**修复内容**：
+1. **homeDirectory 冲突**：使用 `lib.mkForce` 覆盖默认值
+2. **模块位置错误**：fonts.nix 应放在 system 而非 desktop
+3. **废弃包名更新**：
+   - `vaapiIntel` → `intel-vaapi-driver`
+   - `vaapiVdpau` → `libva-vdpau-driver`
+   - `gnome-sushi` → `sushi`
+   - `nerdfonts` → `nerd-fonts.jetbrains-mono`
+   - `noto-fonts-emoji` → `noto-fonts-color-emoji`
+   - `fcitx5-configtool` → `qt6Packages.fcitx5-configtool`
+   - `fcitx5-chinese-addons` → `qt6Packages.fcitx5-chinese-addons`
+4. **废弃选项删除**：
+   - `services.greetd.vt`（现固定为 VT1）
+   - `virtualisation.libvirtd.qemu.ovmf`（OVMF 现默认可用）
+   - `programs.zsh.initExtra` → `initContent`
+5. **临时占位符**：添加 fileSystems 配置用于验证
+
+**结果**：✅ `nix flake check` 全部通过
+
+**教训**：
+- NixOS 包名和选项经常变化，需要关注 deprecation warnings
+- 使用最新 nixpkgs 时要检查包是否重命名
+- home-manager 的某些选项（如 fonts.packages）不可用，需使用系统级配置
+- 验证时添加临时占位符可以在不破坏原系统的情况下测试配置

@@ -42,13 +42,19 @@
   - languages.nix ✓
 - [Phase 9] 快速语法验证 ✓ (nix flake show)
 - [Phase 10] Git 初始化与提交 ✓
+- [Phase 10] 修复配置错误与废弃警告 ✓
+- [Phase 10] 完整验证通过 ✓ (nix flake check)
 
 [Doing]
-- [Phase 9] 等待完整验证完成 (nix flake check 后台运行中)
+无
 
 [Next]
-- [Phase 9] 完整构建测试（可选）
 - [Phase 11] 实际部署准备（未来执行）
+  - 备份当前 Arch Linux 系统
+  - 制作 NixOS 安装介质
+  - 分区规划
+  - 安装 NixOS
+  - 应用此配置
 
 [Bugs]
 - DankMaterialShell flake 下载失败（已记录到 lessons.md）
