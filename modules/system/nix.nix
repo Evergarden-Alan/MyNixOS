@@ -16,8 +16,11 @@
     max-jobs = "auto";
     cores = 0;  # 使用所有核心
 
-    # 二进制缓存
+    # 二进制缓存（添加中国大陆镜像）
     substituters = [
+      "https://mirrors.ustc.edu.cn/nix-channels/store"
+      "https://mirror.sjtu.edu.cn/nix-channels/store"
+      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
     ];
