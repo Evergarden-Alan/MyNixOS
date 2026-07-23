@@ -1,0 +1,34 @@
+[terminal.shell]
+program = "/usr/bin/zsh"
+
+[font]
+size = 13.5
+normal = { family = "JetBrains Maple Mono" }
+bold = { family = "JetBrains Maple Mono" }
+italic = { family = "JetBrains Maple Mono" }
+bold_italic = { family = "JetBrains Maple Mono" }
+
+[window]
+decorations = "None"
+opacity = 0.8
+dynamic_padding = false
+padding = { x = 5, y = 5 }
+
+[cursor]
+style = "Block"
+
+[colors]
+draw_bold_text_with_bright_colors = true
+primary = { foreground = "#e3e2e5", background = "#121315" }
+normal = { black = "#121315", red = "#ff729b", green = "#75eb85", yellow = "#fff772", blue = "#99b8df", magenta = "#394f6c", cyan = "#aec9eb", white = "#e7eef6" }
+bright = { black = "#8d9298", red = "#ff9fbb", green = "#a5ffb2", yellow = "#fffaa5", blue = "#c6dfff", magenta = "#d0e5ff", cyan = "#e1eeff", white = "#f8fbff" }
+
+[colors.cursor]
+text = "#c3c6ce"
+cursor = "#e3e2e5"
+
+[colors.selection]
+text = "#28313d"
+background = "#bdc7d6"
+
+[terminal]

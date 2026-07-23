@@ -1,0 +1,13 @@
+[terminal]
+# 绑定在 TTY1 运行
+vt = 1
+
+# 【核心逻辑】首次开机时的自动登录会话
+[initial_session]
+command = "niri-session"
+user = "alan"
+
+# 【备用后路】当你从 Niri 退出注销时，回退到的基础命令行提示符
+[default_session]
+command = "agreety --cmd /bin/sh"
+user = "greeter"

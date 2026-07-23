@@ -1,0 +1,13 @@
+NAME        FSTYPE FSVER LABEL    UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+zram0       swap   1     zram0    814825fe-17b1-4a5d-93af-00572aa6c117                [SWAP]
+nvme0n1                                                                               
+├─nvme0n1p1                                                                           
+├─nvme0n1p2 ntfs         Windows  86A60B58A60B485F                      371.4G    51% /mnt/windows
+├─nvme0n1p3 vfat   FAT32          5F34-C21D                             676.8M    34% /boot
+├─nvme0n1p4 btrfs                 35a70326-6289-487a-9f8e-72bee0f3ecb5   79.1G    59% /var/cache/pacman/pkg
+│                                                                                     /var/log
+│                                                                                     /home
+│                                                                                     /.snapshots
+│                                                                                     /
+├─nvme0n1p5 ntfs                  94A8DA38A8DA1896                                    
+└─nvme0n1p6 ntfs         Recovery E6180BB1180B7FB3                                    

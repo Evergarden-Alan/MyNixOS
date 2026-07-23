@@ -1,0 +1,25 @@
+# Static information about the filesystems.
+# See fstab(5) for details.
+
+# <file system> <dir> <type> <options> <dump> <pass>
+# /dev/nvme0n1p7
+UUID=35a70326-6289-487a-9f8e-72bee0f3ecb5	/         	btrfs     	rw,relatime,ssd,discard=async,space_cache=v2,subvol=/@	0 0
+
+# /dev/nvme0n1p7
+UUID=35a70326-6289-487a-9f8e-72bee0f3ecb5	/.snapshots	btrfs     	rw,relatime,ssd,discard=async,space_cache=v2,subvol=/@snapshots	0 0
+
+# /dev/nvme0n1p7
+UUID=35a70326-6289-487a-9f8e-72bee0f3ecb5	/home     	btrfs     	rw,relatime,ssd,discard=async,space_cache=v2,subvol=/@home	0 0
+
+# /dev/nvme0n1p7
+UUID=35a70326-6289-487a-9f8e-72bee0f3ecb5	/var/cache/pacman/pkg	btrfs     	rw,relatime,ssd,discard=async,space_cache=v2,subvol=/@pkg	0 0
+
+# /dev/nvme0n1p7
+UUID=35a70326-6289-487a-9f8e-72bee0f3ecb5	/var/log  	btrfs     	rw,relatime,ssd,discard=async,space_cache=v2,subvol=/@log	0 0
+
+# /dev/nvme0n1p6
+UUID=5F34-C21D      	/boot     	vfat      	rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro	0 2
+
+# windows
+UUID=86A60B58A60B485F /mnt/windows ntfs-3g defaults,uid=1000,gid=1000,dmask=022,fmask=133 0 0
+

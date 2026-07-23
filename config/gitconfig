@@ -1,0 +1,12 @@
+[user]
+	email = ve1.11@outlook.com
+	name = Alan
+[credential]
+	helper = store
+[http]
+	postBuffer = 524288000
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process

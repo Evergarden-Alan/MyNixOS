@@ -1,0 +1,31 @@
+# Nix
+result
+result-*
+.direnv/
+
+# Secrets
+secrets.fish
+*.secret
+*.key
+*.pem
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+.gcroots/
+
+# Task outputs
+/tmp/

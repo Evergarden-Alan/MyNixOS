@@ -1,0 +1,73 @@
+[Done]
+- [Phase 0] 安装 Nix 包管理器 ✓
+- [Phase 0] 启用 Flakes 功能 ✓
+- [Phase 0] 验证 Nix 可用 ✓
+- [Phase 1] 导出软件包列表 ✓
+- [Phase 1] 复制关键配置文件 ✓
+- [Phase 1] 收集系统服务信息 ✓
+- [Phase 2] 创建 flake.nix ✓
+- [Phase 2] 创建 configuration.nix 骨架 ✓
+- [Phase 2] 创建 home.nix 骨架 ✓
+- [Phase 2] 初始化 flake.lock ✓
+- [Phase 3] 系统级配置模块 ✓
+  - boot.nix ✓
+  - hardware.nix ✓
+  - networking.nix ✓
+  - users.nix ✓
+  - services.nix ✓
+  - security.nix ✓
+  - nix.nix ✓
+- [Phase 4] 桌面环境配置 ✓
+  - niri.nix ✓
+  - fuzzel.nix ✓
+  - fonts.nix ✓
+  - theme.nix ✓
+- [Phase 5] 输入法配置 ✓
+  - fcitx5.nix ✓
+  - rime.nix ✓
+- [Phase 6] Shell 环境配置 ✓
+  - fish.nix ✓
+  - zsh.nix ✓
+  - starship.nix ✓
+  - cli-tools.nix ✓
+- [Phase 7] 应用程序配置 ✓
+  - terminals.nix ✓
+  - browsers.nix ✓
+  - editors.nix ✓
+  - file-managers.nix ✓
+  - media.nix ✓
+  - misc.nix ✓
+- [Phase 8] 开发环境配置 ✓
+  - git.nix ✓
+  - languages.nix ✓
+- [Phase 9] 快速语法验证 ✓ (nix flake show)
+- [Phase 10] 创建 README.md ✓
+
+[Doing]
+- [Phase 9] 等待完整验证完成 (nix flake check 后台运行中)
+
+[Next]
+- [Phase 10] Git 初始化与提交
+- [Phase 11] 实际部署准备（未来执行）
+
+[Bugs]
+- DankMaterialShell flake 下载失败（已记录到 lessons.md）
+
+[Next]
+- [Phase 1] 导出软件包列表
+- [Phase 1] 复制关键配置文件
+- [Phase 1] 收集系统服务信息
+- [Phase 2] 创建 flake.nix
+- [Phase 2] 创建 configuration.nix 骨架
+- [Phase 2] 创建 home.nix 骨架
+- [Phase 3] 实现系统级配置模块
+- [Phase 4] 配置桌面环境
+- [Phase 5] 配置输入法
+- [Phase 6] 配置 Shell 环境
+- [Phase 7] 配置应用程序
+- [Phase 8] 配置开发环境
+- [Phase 9] 配置验证与测试
+- [Phase 10] 文档完善与版本控制
+- [Phase 11] 实际部署准备（未来执行）
+
+[Bugs]

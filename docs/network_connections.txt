@@ -1,0 +1,7 @@
+NAME                UUID                                  TYPE      DEVICE         
+Wired connection 2  a99a0be8-81f9-3071-ab0f-1aadd2683ecd  ethernet  enp88s0        
+__________Lite      b3190cc2-8e79-4d3d-8836-bf0859b6da15  tun       __________Lite 
+lo                  9967ab97-008c-49c0-b58b-be5881c920b9  loopback  lo             
+docker0             d9c826f8-b557-4cd8-9538-535e59bf14cd  bridge    docker0        
+virbr0              1934c74e-34c3-4c2c-9b9a-0436b84a9ad4  bridge    virbr0         
+Wired connection 1  022f5e55-f093-3829-a1b0-a0c81244f4ad  ethernet  --             
