@@ -12,14 +12,14 @@
     };
 
     # DankMaterialShell 桌面环境
-    # 注意：当前 stable 分支下载失败，稍后重试或使用主分支
-    # dms = {
-    #   url = "github:AvengeMedia/DankMaterialShell/stable";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    # 尝试使用主分支替代 stable 分支
+    dms = {
+      url = "github:AvengeMedia/DankMaterialShell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs: {
+  outputs = { self, nixpkgs, home-manager, dms, ... }@inputs: {
     # NixOS 系统配置
     nixosConfigurations = {
       # 主机名：archlinux（可根据需要修改）
@@ -41,6 +41,9 @@
             home-manager.users.alan = import ./home.nix;
             home-manager.extraSpecialArgs = { inherit inputs; };
           }
+
+          # DankMaterialShell NixOS 模块
+          dms.nixosModules.default
         ];
       };
     };

@@ -3,7 +3,7 @@
 {
   imports = [
     # 桌面环境
-    # ./modules/desktop/dms.nix  # DMS flake 暂不可用
+    ./modules/desktop/dms.nix
     ./modules/desktop/niri.nix
     ./modules/desktop/fuzzel.nix
     ./modules/desktop/theme.nix
