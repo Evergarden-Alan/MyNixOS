@@ -32,9 +32,18 @@ error: cannot read file from tarball: Truncated tar archive detected while readi
 - 先完成基础框架验证
 - 稍后重试或使用主分支：`url = "github:AvengeMedia/DankMaterialShell";`
 
+**最终解决**（已修复）：
+1. 切换到 DMS 主分支：`url = "github:AvengeMedia/DankMaterialShell";`
+2. 使用 NixOS 模块而非包：`dms.nixosModules.default`
+3. DMS 提供的是模块（modules），不是独立包（packages）
+4. 在 flake.nix 的 nixosSystem modules 中添加：`dms.nixosModules.default`
+5. 创建 modules/desktop/dms.nix 管理配置文件
+
 **教训**：
 - 外部 flake 依赖可能不稳定，需要降级方案
 - 可以先手动安装 DMS 包，不通过 flake 集成
+- 使用 `nix flake show` 检查 flake 提供的是 packages 还是 modules
+- DMS 通过 NixOS 模块自动提供 Niri，不需要手动安装包
 
 ---
 
